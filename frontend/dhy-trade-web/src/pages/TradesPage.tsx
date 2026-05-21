@@ -39,6 +39,7 @@ export default function TradesPage() {
         stockName: values.stockName,
         type: values.type,
         lots: values.lots,
+        price: values.price || undefined,
         note: values.note,
         tradedAt: values.tradedAt?.toISOString(),
       });
@@ -46,8 +47,9 @@ export default function TradesPage() {
       setModalOpen(false);
       form.resetFields();
       loadTrades();
-    } catch {
-      // handled by form validation or API
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || '添加失败';
+      message.error(typeof msg === 'string' ? msg : '添加失败');
     } finally {
       setSubmitting(false);
     }
@@ -67,9 +69,10 @@ export default function TradesPage() {
     { title: '方向', dataIndex: 'type', key: 'type', width: 80,
       render: (v: string) => <Tag color={v === 'Buy' ? 'red' : 'green'}>{v === 'Buy' ? '买入' : '卖出'}</Tag> },
     { title: '手数', dataIndex: 'lots', key: 'lots' },
-    { title: '价格', dataIndex: 'price', key: 'price', render: (v: number) => v.toFixed(2) },
+    { title: '成本价', dataIndex: 'price', key: 'price', render: (v: number) => v.toFixed(2) },
     { title: '金额', dataIndex: 'amount', key: 'amount', render: (v: number) => v.toLocaleString() },
     { title: '手续费', dataIndex: 'commission', key: 'comm', render: (v: number) => v.toFixed(2) },
+    { title: '总成本', dataIndex: 'totalCost', key: 'cost', render: (v: number) => v.toLocaleString() },
     { title: '操作员', dataIndex: 'operatorName', key: 'op' },
     ...(isOperator ? [{
       title: '操作', key: 'action', width: 80,
@@ -95,26 +98,29 @@ export default function TradesPage() {
       <Modal title="新增操作记录" open={modalOpen} onCancel={() => setModalOpen(false)}
         onOk={handleAdd} confirmLoading={submitting}>
         <Form form={form} layout="vertical">
-          <Form.Item name="stockCode" label="股票代码" rules={[{ required: true }]}>
+          <Form.Item name="stockCode" label="股票代码" rules={[{ required: true, message: '请输入股票代码' }]}>
             <Input placeholder="如 sh600519" />
           </Form.Item>
-          <Form.Item name="stockName" label="股票名称" rules={[{ required: true }]}>
+          <Form.Item name="stockName" label="股票名称" rules={[{ required: true, message: '请输入股票名称' }]}>
             <Input placeholder="如 贵州茅台" />
           </Form.Item>
-          <Form.Item name="type" label="方向" rules={[{ required: true }]}>
+          <Form.Item name="type" label="方向" rules={[{ required: true, message: '请选择' }]}>
             <Select options={[
               { label: '买入', value: 'Buy' },
               { label: '卖出', value: 'Sell' },
             ]} />
           </Form.Item>
-          <Form.Item name="lots" label="手数" rules={[{ required: true }]}>
+          <Form.Item name="lots" label="手数" rules={[{ required: true, message: '请输入手数' }]}>
             <InputNumber min={1} style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="price" label="成本价（留空则自动获取实时价）">
+            <InputNumber min={0.01} step={0.01} style={{ width: '100%' }} placeholder="自动获取" />
+          </Form.Item>
+          <Form.Item name="tradedAt" label="交易时间（留空则为当前时间）">
+            <DatePicker showTime style={{ width: '100%' }} placeholder="当前时间" />
           </Form.Item>
           <Form.Item name="note" label="备注">
             <Input.TextArea rows={2} />
-          </Form.Item>
-          <Form.Item name="tradedAt" label="交易时间">
-            <DatePicker showTime style={{ width: '100%' }} />
           </Form.Item>
         </Form>
       </Modal>

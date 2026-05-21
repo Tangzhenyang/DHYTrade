@@ -18,11 +18,23 @@ public class TradeService
 
     public async Task<TradeRecordDto> AddTradeAsync(AddTradeRequest request, Guid operatorId)
     {
-        var quote = await _quote.GetQuoteAsync(request.StockCode);
-        if (quote == null)
-            throw new InvalidOperationException($"无法获取 {request.StockCode} 的实时行情");
+        decimal price;
+        string stockName;
 
-        var price = quote.CurrentPrice;
+        if (request.Price.HasValue && request.Price.Value > 0)
+        {
+            price = request.Price.Value;
+            stockName = request.StockName;
+        }
+        else
+        {
+            var quote = await _quote.GetQuoteAsync(request.StockCode);
+            if (quote == null)
+                throw new InvalidOperationException($"无法获取 {request.StockCode} 的实时行情，请手动输入成本价");
+            price = quote.CurrentPrice;
+            stockName = quote.StockName;
+        }
+
         var shares = request.Lots * 100;
         var amount = shares * price;
         var commission = Math.Max(amount * 0.0001m, 5.00m);
@@ -33,7 +45,7 @@ public class TradeService
         var trade = new TradeRecord
         {
             StockCode = request.StockCode,
-            StockName = quote.StockName,
+            StockName = stockName,
             Type = request.Type == "Buy" ? TradeType.Buy : TradeType.Sell,
             Lots = request.Lots,
             Shares = shares,
@@ -47,7 +59,7 @@ public class TradeService
         };
 
         _db.TradeRecords.Add(trade);
-        await UpdatePositionAsync(request.StockCode, quote.StockName, trade);
+        await UpdatePositionAsync(request.StockCode, stockName, trade);
         await _db.SaveChangesAsync();
 
         return MapTradeDto(trade);

@@ -22,6 +22,7 @@ export interface AddTradeRequest {
   stockName: string;
   type: 'Buy' | 'Sell';
   lots: number;
+  price?: number;
   note?: string;
   tradedAt?: string;
 }

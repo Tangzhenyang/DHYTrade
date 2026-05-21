@@ -7,6 +7,7 @@ public record AddTradeRequest(
     [Required] string StockName,
     [Required] string Type,
     [Required, Range(1, int.MaxValue)] int Lots,
+    decimal? Price,
     string? Note,
     DateTime? TradedAt
 );
