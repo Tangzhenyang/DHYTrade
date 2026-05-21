@@ -1,0 +1,101 @@
+<h2>股票跟仓系统 — 整体架构概览</h2>
+<p class="subtitle">后端 .NET Core 10 + 独立前端 + SQLite 存储 + 免费行情API</p>
+
+<div class="section">
+  <h3>系统组成</h3>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">系统架构图</div>
+  <div class="mockup-body">
+    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+      <!-- Frontend -->
+      <div style="flex: 1; min-width: 180px; border: 1px solid #333; border-radius: 8px; padding: 12px;">
+        <h4 style="margin: 0 0 8px 0; color: #60a5fa;">🖥️ 前端 (SPA)</h4>
+        <div style="font-size: 13px; color: #ccc;">
+          <div style="margin-bottom: 4px;">• 用户登录/注册</div>
+          <div style="margin-bottom: 4px;">• 管理仪表盘</div>
+          <div style="margin-bottom: 4px;">• 仓位占比展示</div>
+          <div style="margin-bottom: 4px;">• 跟仓计算器</div>
+          <div style="margin-bottom: 4px;">• 公告栏</div>
+        </div>
+      </div>
+
+      <!-- Backend API -->
+      <div style="flex: 1; min-width: 180px; border: 1px solid #333; border-radius: 8px; padding: 12px;">
+        <h4 style="margin: 0 0 8px 0; color: #34d399;">⚙️ 后端 API (.NET Core 10)</h4>
+        <div style="font-size: 13px; color: #ccc;">
+          <div style="margin-bottom: 4px;">• RESTful API</div>
+          <div style="margin-bottom: 4px;">• JWT 认证</div>
+          <div style="margin-bottom: 4px;">• 用户权限管理</div>
+          <div style="margin-bottom: 4px;">• 仓位计算引擎</div>
+          <div style="margin-bottom: 4px;">• 行情数据同步</div>
+        </div>
+      </div>
+
+      <!-- Database -->
+      <div style="flex: 1; min-width: 180px; border: 1px solid #333; border-radius: 8px; padding: 12px;">
+        <h4 style="margin: 0 0 8px 0; color: #fbbf24;">💾 数据层</h4>
+        <div style="font-size: 13px; color: #ccc;">
+          <div style="margin-bottom: 4px;">• SQLite 数据库</div>
+          <div style="margin-bottom: 4px;">• 兼容 SQL 表结构</div>
+          <div style="margin-bottom: 4px;">• 方便迁移到 PostgreSQL/MySQL</div>
+        </div>
+      </div>
+
+      <!-- External API -->
+      <div style="flex: 1; min-width: 180px; border: 1px solid #333; border-radius: 8px; padding: 12px;">
+        <h4 style="margin: 0 0 8px 0; color: #a78bfa;">📡 外部API</h4>
+        <div style="font-size: 13px; color: #ccc;">
+          <div style="margin-bottom: 4px;">• 免费股票行情</div>
+          <div style="margin-bottom: 4px;">• 实时价格查询</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>核心功能模块</h3>
+</div>
+
+<div class="cards">
+  <div class="card" data-choice="module-positions">
+    <div class="card-body">
+      <h3>1. 仓位管理</h3>
+      <p>管理员设定基准仓位（如1000万），添加/清仓股票。系统计算并展示各股票仓位占比。</p>
+    </div>
+  </div>
+  <div class="card" data-choice="module-copy">
+    <div class="card-body">
+      <h3>2. 跟仓计算器</h3>
+      <p>普通用户输入自己的资金基准，系统按当前仓位比例自动算出每只股票需购买金额/数量。</p>
+    </div>
+  </div>
+  <div class="card" data-choice="module-price">
+    <div class="card-body">
+      <h3>3. 实时行情</h3>
+      <p>接入免费API获取实时股价，计算各仓位的实时市值和实际占比。</p>
+    </div>
+  </div>
+  <div class="card" data-choice="module-bulletin">
+    <div class="card-body">
+      <h3>4. 公告栏</h3>
+      <p>管理员发布每日操作公告，所有用户可见。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>待确认的问题</h3>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="frontend-tech" onclick="toggleSelect(this)">
+    <div class="letter">?</div>
+    <div class="content">
+      <h3>前端技术选型</h3>
+      <p>你倾向用什么前端框架？React、Vue、Blazor，还是纯HTML+JS？</p>
+    </div>
+  </div>
+</div>

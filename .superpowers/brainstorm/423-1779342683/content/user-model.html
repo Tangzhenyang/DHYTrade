@@ -1,0 +1,83 @@
+<h2>用户权限模型</h2>
+<p class="subtitle">谁可以使用系统？怎么注册？</p>
+
+<div class="options">
+  <div class="option" data-choice="simple-roles" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>双角色：管理员 + 普通用户</h3>
+      <p>管理员：管理仓位、发布公告。普通用户：查看仓位、使用跟仓计算器。注册默认普通用户。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="three-roles" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>三角色：超级管理员 + 操作员 + 用户</h3>
+      <p>超级管理员管用户，操作员负责日常买卖记录，用户跟仓。适合多人协作团队。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>注册方式</h3>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="open-register" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>开放注册</h3>
+      <p>任何人都可以注册，注册后为普通用户。管理员账号由系统初始化创建。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="invite-only" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>仅邀请注册</h3>
+      <p>管理员生成邀请链接或邀请码，只有被邀请的人才能注册。更私密可控。</p>
+    </div>
+  </div>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">权限矩阵预览</div>
+  <div class="mockup-body">
+    <table style="width:100%; border-collapse: collapse; color: #d4d4d8;">
+      <tr style="border-bottom: 2px solid #555;">
+        <th style="padding:8px; text-align:left;">功能</th>
+        <th style="padding:8px; text-align:center;">管理员</th>
+        <th style="padding:8px; text-align:center;">普通用户</th>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding:8px;">查看仓位占比</td>
+        <td style="padding:8px; text-align:center;">✅</td>
+        <td style="padding:8px; text-align:center;">✅</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding:8px;">使用跟仓计算器</td>
+        <td style="padding:8px; text-align:center;">✅</td>
+        <td style="padding:8px; text-align:center;">✅</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding:8px;">查看公告</td>
+        <td style="padding:8px; text-align:center;">✅</td>
+        <td style="padding:8px; text-align:center;">✅</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding:8px;">添加/清仓操作</td>
+        <td style="padding:8px; text-align:center;">✅</td>
+        <td style="padding:8px; text-align:center;">❌</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding:8px;">发布公告</td>
+        <td style="padding:8px; text-align:center;">✅</td>
+        <td style="padding:8px; text-align:center;">❌</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding:8px;">用户管理</td>
+        <td style="padding:8px; text-align:center;">✅</td>
+        <td style="padding:8px; text-align:center;">❌</td>
+      </tr>
+    </table>
+  </div>
+</div>
