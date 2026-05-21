@@ -16,6 +16,13 @@ export default function BulletinPage() {
   const [form] = Form.useForm();
   const { user } = useAuthStore();
   const isOperator = user?.role === 'SuperAdmin' || user?.role === 'Operator';
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const load = async () => {
     const res = await getBulletins();
@@ -50,21 +57,24 @@ export default function BulletinPage() {
   };
 
   return (
-    <Card title="公告栏" extra={
-      isOperator && (
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => {
-          setEditingId(null);
-          form.resetFields();
-          setModalOpen(true);
-        }}>
-          发布公告
-        </Button>
-      )
-    }>
+    <Card className="animate-in stagger-1" title={<span style={{ color: 'var(--text-primary)' }}>公告栏</span>}
+      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+      extra={
+        isOperator && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => {
+            setEditingId(null);
+            form.resetFields();
+            setModalOpen(true);
+          }}>
+            发布公告
+          </Button>
+        )
+      }>
       <List
         dataSource={bulletins}
         renderItem={(item) => (
           <List.Item
+            style={{ width: isMobile ? '100%' : undefined }}
             extra={isOperator && (
               <Space>
                 <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(item)} />
@@ -77,16 +87,16 @@ export default function BulletinPage() {
             <List.Item.Meta
               title={
                 <Space>
-                  {item.isPinned && <Tag color="red">置顶</Tag>}
-                  <Typography.Text strong>{item.title}</Typography.Text>
+                  {item.isPinned && <Tag style={{ background: 'var(--accent)', borderColor: 'transparent', color: 'var(--accent-text)' }}>置顶</Tag>}
+                  <Typography.Text strong style={{ color: 'var(--text-primary)' }}>{item.title}</Typography.Text>
                 </Space>
               }
               description={
                 <>
-                  <Typography.Paragraph style={{ whiteSpace: 'pre-wrap' }}>
+                  <Typography.Paragraph style={{ whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
                     {item.content}
                   </Typography.Paragraph>
-                  <Typography.Text type="secondary">
+                  <Typography.Text style={{ color: 'var(--text-muted)' }}>
                     {item.authorName} · {dayjs(item.createdAt).format('YYYY-MM-DD HH:mm')}
                   </Typography.Text>
                 </>
@@ -96,8 +106,11 @@ export default function BulletinPage() {
         )}
       />
 
-      <Modal title={editingId ? '编辑公告' : '发布公告'} open={modalOpen}
-        onCancel={() => setModalOpen(false)} onOk={handleSave}>
+      <Modal title={<span style={{ color: 'var(--text-primary)' }}>{editingId ? '编辑公告' : '发布公告'}</span>}
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)} onOk={handleSave}
+        width={isMobile ? '100%' : 520}
+        style={{ top: isMobile ? 0 : undefined }}>
         <Form form={form} layout="vertical">
           <Form.Item name="title" label="标题" rules={[{ required: true }]}>
             <Input />

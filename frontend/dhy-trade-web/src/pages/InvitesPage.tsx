@@ -6,6 +6,13 @@ import dayjs from 'dayjs';
 
 export default function InvitesPage() {
   const [invites, setInvites] = useState<any[]>([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const load = async () => {
     const res = await getInvites();
@@ -23,29 +30,37 @@ export default function InvitesPage() {
   const columns = [
     {
       title: '邀请码', dataIndex: 'code', key: 'code',
-      render: (v: string) => <Typography.Text copyable strong>{v}</Typography.Text>,
+      render: (v: string) => <Typography.Text copyable strong style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{v}</Typography.Text>,
     },
     {
       title: '状态', dataIndex: 'isUsed', key: 'status',
-      render: (v: boolean) => v ? <Tag color="default">已使用</Tag> : <Tag color="green">可用</Tag>,
+      render: (v: boolean) => v
+        ? <Tag style={{ background: 'var(--bg-elevated)', borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}>已使用</Tag>
+        : <Tag style={{ background: 'var(--positive)', borderColor: 'transparent', color: '#fff' }}>可用</Tag>,
     },
     {
       title: '有效期', dataIndex: 'expiresAt', key: 'expire',
-      render: (v: string | null) => v ? dayjs(v).format('YYYY-MM-DD') : '永久有效',
+      render: (v: string | null) => v
+        ? <span style={{ fontFamily: 'var(--font-mono)' }}>{dayjs(v).format('YYYY-MM-DD')}</span>
+        : <span style={{ color: 'var(--text-muted)' }}>永久有效</span>,
     },
     {
       title: '创建时间', dataIndex: 'createdAt', key: 'time',
-      render: (v: string) => dayjs(v).format('YYYY-MM-DD HH:mm'),
+      render: (v: string) => <span style={{ fontFamily: 'var(--font-mono)' }}>{dayjs(v).format('YYYY-MM-DD HH:mm')}</span>,
     },
   ];
 
   return (
-    <Card title="邀请码管理" extra={
-      <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-        生成邀请码
-      </Button>
-    }>
-      <Table columns={columns} dataSource={invites} rowKey="id" size="small" />
+    <Card className="animate-in stagger-1" title={<span style={{ color: 'var(--text-primary)' }}>邀请码管理</span>}
+      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+      extra={
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+          生成邀请码
+        </Button>
+      }>
+      <Table columns={columns} dataSource={invites} rowKey="id" size="small"
+        scroll={{ x: isMobile ? 600 : undefined }}
+        style={{ fontFamily: 'var(--font-mono)' }} />
     </Card>
   );
 }

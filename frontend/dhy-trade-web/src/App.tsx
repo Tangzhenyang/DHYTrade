@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider, App as AntApp } from 'antd';
+import { ConfigProvider, App as AntApp, theme as antTheme } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import AppLayout from './components/AppLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
@@ -14,9 +15,26 @@ import StockHistoryPage from './pages/StockHistoryPage';
 import UsersPage from './pages/UsersPage';
 import InvitesPage from './pages/InvitesPage';
 
-export default function App() {
+function ThemedApp() {
+  const { theme } = useTheme();
+
   return (
-    <ConfigProvider locale={zhCN}>
+    <ConfigProvider
+      locale={zhCN}
+      theme={{
+        algorithm: theme === 'dark' ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
+        token: {
+          fontFamily: "'Noto Sans SC', -apple-system, sans-serif",
+          borderRadius: 2,
+          colorPrimary: '#c4953c',
+          colorBgContainer: theme === 'dark' ? '#12171f' : '#ffffff',
+          colorBgElevated: theme === 'dark' ? '#181e2a' : '#faf8f5',
+          colorBorder: theme === 'dark' ? '#1e2836' : '#e2ddd4',
+          colorText: theme === 'dark' ? '#c8cfda' : '#1a1814',
+          colorTextSecondary: theme === 'dark' ? '#6e7685' : '#6b6357',
+        },
+      }}
+    >
       <AntApp>
         <BrowserRouter>
           <Routes>
@@ -49,5 +67,13 @@ export default function App() {
         </BrowserRouter>
       </AntApp>
     </ConfigProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <ThemedApp />
+    </ThemeProvider>
   );
 }

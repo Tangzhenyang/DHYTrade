@@ -5,6 +5,13 @@ import type { UserDto } from '../api/auth';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserDto[]>([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const load = async () => {
     const res = await getUsers();
@@ -54,8 +61,11 @@ export default function UsersPage() {
   ];
 
   return (
-    <Card title="用户管理">
-      <Table columns={columns} dataSource={users} rowKey="id" size="small" />
+    <Card className="animate-in stagger-1" title={<span style={{ color: 'var(--text-primary)' }}>用户管理</span>}
+      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+      <Table columns={columns} dataSource={users} rowKey="id" size="small"
+        scroll={{ x: isMobile ? 600 : undefined }}
+        style={{ fontFamily: 'var(--font-mono)' }} />
     </Card>
   );
 }

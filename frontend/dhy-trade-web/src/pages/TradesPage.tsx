@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Table, Button, Modal, Form, Input, InputNumber,
   Select, DatePicker, Tag, Popconfirm, message, Card
@@ -17,6 +17,13 @@ export default function TradesPage() {
   const [form] = Form.useForm();
   const { user } = useAuthStore();
   const isOperator = user?.role === 'SuperAdmin' || user?.role === 'Operator';
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const loadTrades = async () => {
     setLoading(true);
@@ -61,42 +68,83 @@ export default function TradesPage() {
     loadTrades();
   };
 
-  const columns = [
-    { title: '时间', dataIndex: 'tradedAt', key: 'time', width: 160,
-      render: (v: string) => dayjs(v).format('YYYY-MM-DD HH:mm') },
-    { title: '股票', dataIndex: 'stockName', key: 'name', width: 120 },
-    { title: '代码', dataIndex: 'stockCode', key: 'code', width: 100 },
-    { title: '方向', dataIndex: 'type', key: 'type', width: 80,
-      render: (v: string) => <Tag color={v === 'Buy' ? 'red' : 'green'}>{v === 'Buy' ? '买入' : '卖出'}</Tag> },
-    { title: '手数', dataIndex: 'lots', key: 'lots' },
-    { title: '成本价', dataIndex: 'price', key: 'price', render: (v: number) => v.toFixed(2) },
-    { title: '金额', dataIndex: 'amount', key: 'amount', render: (v: number) => v.toLocaleString() },
-    { title: '手续费', dataIndex: 'commission', key: 'comm', render: (v: number) => v.toFixed(2) },
-    { title: '总成本', dataIndex: 'totalCost', key: 'cost', render: (v: number) => v.toLocaleString() },
-    { title: '操作员', dataIndex: 'operatorName', key: 'op' },
-    ...(isOperator ? [{
-      title: '操作', key: 'action', width: 80,
-      render: (_: unknown, r: TradeRecordDto) => (
-        <Popconfirm title="确定删除？" onConfirm={() => handleDelete(r.id)}>
-          <Button type="link" danger icon={<DeleteOutlined />} size="small" />
-        </Popconfirm>
-      ),
-    }] : []),
-  ];
+  const columns = useMemo(() => {
+    const allColumns = [
+      {
+        title: '时间', dataIndex: 'tradedAt', key: 'time', width: 160,
+        render: (v: string) => <span style={{ fontFamily: 'var(--font-mono)' }}>{dayjs(v).format('YYYY-MM-DD HH:mm')}</span>
+      },
+      { title: '股票', dataIndex: 'stockName', key: 'name', width: 120 },
+      { title: '代码', dataIndex: 'stockCode', key: 'code', width: 100 },
+      {
+        title: '方向', dataIndex: 'type', key: 'type', width: 80,
+        render: (v: string) => (
+          <Tag style={{
+            background: v === 'Buy' ? 'var(--negative)' : 'var(--positive)',
+            borderColor: 'transparent', color: '#fff', fontFamily: 'var(--font-mono)'
+          }}>
+            {v === 'Buy' ? '买入' : '卖出'}
+          </Tag>
+        )
+      },
+      {
+        title: '手数', dataIndex: 'lots', key: 'lots',
+        render: (v: number) => <span style={{ fontFamily: 'var(--font-mono)' }}>{v}</span>
+      },
+      {
+        title: '成本价', dataIndex: 'price', key: 'price',
+        render: (v: number) => <span style={{ fontFamily: 'var(--font-mono)' }}>{v.toFixed(2)}</span>
+      },
+      {
+        title: '金额', dataIndex: 'amount', key: 'amount',
+        render: (v: number) => <span style={{ fontFamily: 'var(--font-mono)' }}>{v.toLocaleString()}</span>
+      },
+      {
+        title: '手续费', dataIndex: 'commission', key: 'comm',
+        render: (v: number) => <span style={{ fontFamily: 'var(--font-mono)' }}>{v.toFixed(2)}</span>
+      },
+      {
+        title: '总成本', dataIndex: 'totalCost', key: 'cost',
+        render: (v: number) => <span style={{ fontFamily: 'var(--font-mono)' }}>{v.toLocaleString()}</span>
+      },
+      { title: '操作员', dataIndex: 'operatorName', key: 'op' },
+      ...(isOperator ? [{
+        title: '操作', key: 'action', width: 80,
+        render: (_: unknown, r: TradeRecordDto) => (
+          <Popconfirm title="确定删除？" onConfirm={() => handleDelete(r.id)}>
+            <Button type="link" danger icon={<DeleteOutlined />} size="small" />
+          </Popconfirm>
+        ),
+      }] : []),
+    ];
+
+    if (isMobile) {
+      const essentialKeys = ['time', 'name', 'type', 'lots', 'price'];
+      return allColumns.filter(col => essentialKeys.includes(col.key));
+    }
+    return allColumns;
+  }, [isMobile, isOperator]);
 
   return (
-    <Card title="交易记录" extra={
-      isOperator && (
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
-          添加记录
-        </Button>
-      )
-    }>
+    <Card className="animate-in stagger-1" title={<span style={{ color: 'var(--text-primary)' }}>交易记录</span>}
+      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+      extra={
+        isOperator && (
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
+            添加记录
+          </Button>
+        )
+      }>
       <Table columns={columns} dataSource={trades} rowKey="id" loading={loading}
-        pagination={{ pageSize: 20 }} size="small" />
+        pagination={{ pageSize: 20 }} size="small"
+        scroll={{ x: isMobile ? 600 : undefined }}
+        style={{ fontFamily: 'var(--font-mono)' }} />
 
-      <Modal title="新增操作记录" open={modalOpen} onCancel={() => setModalOpen(false)}
-        onOk={handleAdd} confirmLoading={submitting}>
+      <Modal title={<span style={{ color: 'var(--text-primary)' }}>新增操作记录</span>}
+        open={modalOpen} onCancel={() => setModalOpen(false)}
+        onOk={handleAdd} confirmLoading={submitting}
+        width={isMobile ? '100%' : 520}
+        style={{ top: isMobile ? 0 : undefined }}>
         <Form form={form} layout="vertical">
           <Form.Item name="stockCode" label="股票代码" rules={[{ required: true, message: '请输入股票代码' }]}>
             <Input placeholder="如 sh600519" />
