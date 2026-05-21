@@ -43,6 +43,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<PositionService>();
+builder.Services.AddScoped<HistoryService>();
 builder.Services.AddHttpClient<IQuoteProvider, SinaQuoteProvider>();
 builder.Services.AddHostedService<QuoteRefreshService>();
 
