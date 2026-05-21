@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using DHYTrade.Api.Models.DTOs;
 
 namespace DHYTrade.Api.Services;
@@ -26,10 +27,17 @@ public class SinaQuoteProvider : IQuoteProvider
         var codes = string.Join(",", stockCodes.Select(ToSinaCode));
         var url = $"https://hq.sinajs.cn/list={codes}";
 
-        _http.DefaultRequestHeaders.Referrer = new Uri("https://finance.sina.com.cn");
-        var response = await _http.GetStringAsync(url);
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Referrer = new Uri("https://finance.sina.com.cn");
 
-        var lines = response.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        var response = await _http.SendAsync(request);
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+
+        // Sina API returns GB18030/GBK encoded content
+        var encoding = Encoding.GetEncoding("GB18030");
+        var text = encoding.GetString(bytes);
+
+        var lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         foreach (var line in lines)
         {
             var result = ParseSinaLine(line);

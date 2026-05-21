@@ -6,6 +6,9 @@ using DHYTrade.Api.Data;
 using DHYTrade.Api.Models.Entities;
 using DHYTrade.Api.Services;
 
+// Register encoding provider for GB18030 (needed by Sina Finance API)
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
