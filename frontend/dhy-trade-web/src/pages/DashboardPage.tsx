@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Row, Col, Card, Statistic, Table, Spin, Button, InputNumber, message, Space } from 'antd';
 import {
   DollarOutlined, PieChartOutlined, RiseOutlined, ArrowDownOutlined, EditOutlined, ReloadOutlined
@@ -58,11 +58,23 @@ export default function DashboardPage() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [leftPct, setLeftPct] = useState(40); // default 4:6
   const [dragging, setDragging] = useState(false);
+  const chartRef = useRef<any>(null);
+
+  // Resize chart when splitter moves
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      chartRef.current?.getEchartsInstance()?.resize();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [leftPct]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      chartRef.current?.getEchartsInstance()?.resize();
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -228,7 +240,7 @@ export default function DashboardPage() {
           transition: 'width 0.05s',
         }}>
           <Card style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', height: '100%' }}>
-            <ReactECharts option={pieOption} style={{ height: '100%' }} />
+            <ReactECharts ref={chartRef} option={pieOption} style={{ height: 340 }} />
           </Card>
         </div>
 
