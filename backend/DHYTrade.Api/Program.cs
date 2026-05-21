@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using DHYTrade.Api.Data;
+using DHYTrade.Api.Models.Entities;
 using DHYTrade.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,6 +59,25 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Seed admin user
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+
+    if (!db.Users.Any(u => u.Role == UserRole.SuperAdmin))
+    {
+        db.Users.Add(new User
+        {
+            Username = "admin",
+            Email = "admin@dhy.trade",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+            Role = UserRole.SuperAdmin
+        });
+        db.SaveChanges();
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
