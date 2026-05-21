@@ -44,6 +44,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<PositionService>();
 builder.Services.AddHttpClient<IQuoteProvider, SinaQuoteProvider>();
+builder.Services.AddHostedService<QuoteRefreshService>();
 
 builder.Services.AddCors(options =>
 {
