@@ -18,7 +18,10 @@
       "Bash(curl -s http://localhost:5000/swagger/index.html -o /dev/null -w \"%{http_code}\")",
       "Bash(curl -s http://localhost:5001/swagger/index.html -o /dev/null -w \"%{http_code}\")",
       "Bash(curl -s http://localhost:50540/swagger/index.html -o /dev/null -w \"%{http_code}\")",
-      "Bash(taskkill //F //IM DHYTrade.Api.exe)"
+      "Bash(taskkill //F //IM DHYTrade.Api.exe)",
+      "Bash(dotnet run *)",
+      "Bash(sqlite3 DHYTrade.db \"SELECT StockCode, StockName, Shares FROM Positions WHERE IsActive = 1;\")",
+      "Bash(curl -s -X POST http://localhost:5000/api/positions/refresh -H \"Authorization: Bearer test\")"
     ]
   }
 }

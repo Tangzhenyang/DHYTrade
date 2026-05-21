@@ -31,16 +31,25 @@ public class QuoteRefreshService : BackgroundService
 
                 if (stockCodes.Any())
                 {
+                    var positions = await db.Positions
+                        .Where(p => p.IsActive && p.Shares > 0)
+                        .ToListAsync(stoppingToken);
+
                     var quotes = await quote.GetQuotesAsync(stockCodes);
-                    foreach (var q in quotes)
+                    foreach (var pos in positions)
                     {
-                        var pos = await db.Positions
-                            .FirstOrDefaultAsync(p => p.StockCode == q.StockCode, stoppingToken);
-                        if (pos != null)
+                        var matchedQuote = quotes.FirstOrDefault(q =>
                         {
-                            pos.CurrentPrice = q.CurrentPrice;
-                            pos.StockName = q.StockName;
-                            pos.MarketValue = pos.Shares * q.CurrentPrice;
+                            var qCode = q.StockCode.Replace("sh", "").Replace("sz", "");
+                            var pCode = pos.StockCode.Replace("sh", "").Replace("sz", "");
+                            return qCode == pCode;
+                        });
+
+                        if (matchedQuote != null)
+                        {
+                            pos.CurrentPrice = matchedQuote.CurrentPrice;
+                            pos.StockName = matchedQuote.StockName;
+                            pos.MarketValue = pos.Shares * matchedQuote.CurrentPrice;
                             pos.UnrealizedPnl = pos.MarketValue - pos.TotalCost;
                             pos.UnrealizedPnlPct = pos.TotalCost > 0
                                 ? pos.UnrealizedPnl / pos.TotalCost : 0;

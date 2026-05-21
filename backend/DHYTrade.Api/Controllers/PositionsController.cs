@@ -37,25 +37,32 @@ public class PositionsController : ControllerBase
     [HttpPost("refresh")]
     public async Task<IActionResult> RefreshPrices()
     {
-        var stockCodes = await _db.Positions
+        var positions = await _db.Positions
             .Where(p => p.IsActive && p.Shares > 0)
-            .Select(p => p.StockCode)
             .ToListAsync();
 
-        if (!stockCodes.Any())
+        if (!positions.Any())
             return Ok(new { message = "没有活跃持仓", updated = 0 });
 
+        var stockCodes = positions.Select(p => p.StockCode).ToList();
         var quotes = await _quote.GetQuotesAsync(stockCodes);
         var count = 0;
 
-        foreach (var q in quotes)
+        foreach (var pos in positions)
         {
-            var pos = await _db.Positions.FirstOrDefaultAsync(p => p.StockCode == q.StockCode);
-            if (pos != null)
+            // Match by removing sh/sz prefix from both sides
+            var matchedQuote = quotes.FirstOrDefault(q =>
             {
-                pos.CurrentPrice = q.CurrentPrice;
-                pos.StockName = q.StockName;
-                pos.MarketValue = pos.Shares * q.CurrentPrice;
+                var qCode = q.StockCode.Replace("sh", "").Replace("sz", "");
+                var pCode = pos.StockCode.Replace("sh", "").Replace("sz", "");
+                return qCode == pCode;
+            });
+
+            if (matchedQuote != null)
+            {
+                pos.CurrentPrice = matchedQuote.CurrentPrice;
+                pos.StockName = matchedQuote.StockName;
+                pos.MarketValue = pos.Shares * matchedQuote.CurrentPrice;
                 pos.UnrealizedPnl = pos.MarketValue - pos.TotalCost;
                 pos.UnrealizedPnlPct = pos.TotalCost > 0
                     ? pos.UnrealizedPnl / pos.TotalCost : 0;
@@ -65,6 +72,6 @@ public class PositionsController : ControllerBase
         }
 
         await _db.SaveChangesAsync();
-        return Ok(new { message = $"已刷新 {count} 只股票", updated = count });
+        return Ok(new { message = $"已刷新 {count} 只股票", updated = count, codes = stockCodes, quoteCount = quotes.Count });
     }
 }
