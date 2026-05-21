@@ -56,6 +56,8 @@ export default function DashboardPage() {
   const [saving, setSaving] = useState(false);
   const [refreshingPrice, setRefreshingPrice] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [leftPct, setLeftPct] = useState(40); // default 4:6
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -64,6 +66,37 @@ export default function DashboardPage() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const handleMouseDown = () => {
+    setDragging(true);
+  };
+
+  useEffect(() => {
+    if (!dragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = document.getElementById('split-container');
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const pct = ((e.clientX - rect.left) / rect.width) * 100;
+      setLeftPct(Math.max(20, Math.min(70, pct)));
+    };
+
+    const handleMouseUp = () => setDragging(false);
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    // Prevent text selection while dragging
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+  }, [dragging]);
 
   const handleRefreshPrice = async () => {
     setRefreshingPrice(true);
@@ -124,9 +157,9 @@ export default function DashboardPage() {
           刷新行情
         </Button>
       </div>
-      <Row gutter={[16, 24]}>
-        <Col span={isMobile ? 24 : 8}>
-          <Card className="animate-in stagger-1" style={{ background: 'var(--stat-card-bg)', border: '1px solid var(--border-default)' }}>
+      <Row gutter={[16, 16]} style={{ alignItems: 'stretch' }}>
+        <Col span={isMobile ? 24 : 8} style={{ display: 'flex' }}>
+          <Card className="animate-in stagger-1" style={{ background: 'var(--stat-card-bg)', border: '1px solid var(--border-default)', width: '100%', minHeight: 120 }}>
             {editing ? (
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Statistic title="基准仓位" value={capitalInput} precision={0}
@@ -164,15 +197,15 @@ export default function DashboardPage() {
             )}
           </Card>
         </Col>
-        <Col span={isMobile ? 24 : 8}>
-          <Card className="animate-in stagger-2" style={{ background: 'var(--stat-card-bg)', border: '1px solid var(--border-default)' }}>
+        <Col span={isMobile ? 24 : 8} style={{ display: 'flex' }}>
+          <Card className="animate-in stagger-2" style={{ background: 'var(--stat-card-bg)', border: '1px solid var(--border-default)', width: '100%', minHeight: 120 }}>
             <Statistic title="当前市值" value={totalMarketValue} precision={0}
               prefix={<PieChartOutlined />} suffix="元"
               valueStyle={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }} />
           </Card>
         </Col>
-        <Col span={isMobile ? 24 : 8}>
-          <Card className="animate-in stagger-3" style={{ background: 'var(--stat-card-bg)', border: '1px solid var(--border-default)' }}>
+        <Col span={isMobile ? 24 : 8} style={{ display: 'flex' }}>
+          <Card className="animate-in stagger-3" style={{ background: 'var(--stat-card-bg)', border: '1px solid var(--border-default)', width: '100%', minHeight: 120 }}>
             <Statistic title="浮动盈亏" value={totalPnl} precision={0}
               prefix={totalPnl >= 0 ? <RiseOutlined /> : <ArrowDownOutlined />}
               suffix="元"
@@ -185,15 +218,51 @@ export default function DashboardPage() {
         </Col>
       </Row>
 
-      <Row gutter={16} style={{ marginTop: 24 }}>
-        <Col span={isMobile ? 24 : 10}>
-          <Card className="animate-in stagger-1" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
-            <ReactECharts option={pieOption} style={{ height: 350 }} />
+      <div id="split-container" style={{ marginTop: 24, display: isMobile ? 'block' : 'flex', height: 400 }}>
+        {/* Chart panel */}
+        <div style={{
+          width: isMobile ? '100%' : `${leftPct}%`,
+          height: '100%',
+          paddingRight: isMobile ? 0 : 8,
+          paddingBottom: isMobile ? 8 : 0,
+          transition: 'width 0.05s',
+        }}>
+          <Card style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', height: '100%' }}>
+            <ReactECharts option={pieOption} style={{ height: '100%' }} />
           </Card>
-        </Col>
-        <Col span={isMobile ? 24 : 14}>
+        </div>
+
+        {/* Drag handle */}
+        {!isMobile && (
+          <div
+            onMouseDown={handleMouseDown}
+            style={{
+              width: 8, cursor: 'col-resize',
+              background: 'transparent',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, userSelect: 'none',
+            }}
+          >
+            <div style={{
+              width: 3, height: 40, borderRadius: 2,
+              background: 'var(--border-default)',
+              transition: 'background 0.15s',
+            }}
+              onMouseEnter={e => (e.target as HTMLElement).style.background = 'var(--accent)'}
+              onMouseLeave={e => (e.target as HTMLElement).style.background = 'var(--border-default)'}
+            />
+          </div>
+        )}
+
+        {/* Table panel */}
+        <div style={{
+          width: isMobile ? '100%' : `${100 - leftPct}%`,
+          height: '100%',
+          paddingLeft: isMobile ? 0 : 8,
+          transition: 'width 0.05s',
+        }}>
           <Card className="animate-in stagger-2" title={<span style={{ color: 'var(--text-primary)' }}>持仓明细</span>}
-            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+            style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', height: '100%', overflow: 'auto' }}>
             <Table
               columns={columns}
               dataSource={positions}
@@ -204,8 +273,8 @@ export default function DashboardPage() {
               style={{ fontFamily: 'var(--font-mono)' }}
             />
           </Card>
-        </Col>
-      </Row>
+        </div>
+      </div>
     </Spin>
   );
 }
