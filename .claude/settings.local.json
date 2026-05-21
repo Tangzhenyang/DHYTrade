@@ -5,7 +5,10 @@
       "Bash(git init *)",
       "Bash(dotnet *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(dotnet new *)",
+      "Bash(git rm *)",
+      "Bash(git commit *)"
     ]
   }
 }
