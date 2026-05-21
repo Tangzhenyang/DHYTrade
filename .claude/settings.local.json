@@ -8,7 +8,13 @@
       "Bash(git commit -m ' *)",
       "Bash(dotnet new *)",
       "Bash(git rm *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(kill %1)",
+      "Bash(npx tsc *)",
+      "Bash(git *)"
     ]
   }
 }
