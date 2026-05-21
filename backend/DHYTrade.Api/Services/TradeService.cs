@@ -95,7 +95,26 @@ public class TradeService
 
         position.AvgCost = position.Shares > 0
             ? position.TotalCost / position.Shares : 0;
-        position.CurrentPrice = trade.Price;
+
+        // Fetch latest market price from API
+        try
+        {
+            var latestQuote = await _quote.GetQuoteAsync(stockCode);
+            if (latestQuote != null)
+            {
+                position.CurrentPrice = latestQuote.CurrentPrice;
+            }
+            else if (position.CurrentPrice == 0)
+            {
+                position.CurrentPrice = trade.Price;
+            }
+        }
+        catch
+        {
+            if (position.CurrentPrice == 0)
+                position.CurrentPrice = trade.Price;
+        }
+
         position.MarketValue = position.Shares * position.CurrentPrice;
         position.UnrealizedPnl = position.MarketValue - position.TotalCost;
         position.UnrealizedPnlPct = position.TotalCost > 0

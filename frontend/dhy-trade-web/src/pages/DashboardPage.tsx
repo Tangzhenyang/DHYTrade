@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Row, Col, Card, Statistic, Table, Spin, Button, InputNumber, message, Space } from 'antd';
 import {
-  DollarOutlined, PieChartOutlined, RiseOutlined, ArrowDownOutlined, EditOutlined
+  DollarOutlined, PieChartOutlined, RiseOutlined, ArrowDownOutlined, EditOutlined, ReloadOutlined
 } from '@ant-design/icons';
 import ReactECharts from 'echarts-for-react';
 import { usePositionStore } from '../stores/positionStore';
 import { useAuthStore } from '../stores/authStore';
 import { setBaseCapital } from '../api/config';
+import { refreshPositions } from '../api/positions';
 import type { PositionDto } from '../api/positions';
 
 const columns = [
@@ -53,8 +54,22 @@ export default function DashboardPage() {
   const [editing, setEditing] = useState(false);
   const [capitalInput, setCapitalInput] = useState(baseCapital);
   const [saving, setSaving] = useState(false);
+  const [refreshingPrice, setRefreshingPrice] = useState(false);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  const handleRefreshPrice = async () => {
+    setRefreshingPrice(true);
+    try {
+      const res = await refreshPositions();
+      message.success(res.data.message);
+      refresh();
+    } catch {
+      message.error('刷新失败');
+    } finally {
+      setRefreshingPrice(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -86,6 +101,16 @@ export default function DashboardPage() {
 
   return (
     <Spin spinning={loading}>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ margin: 0 }}>仓位看板</h2>
+        <Button
+          icon={<ReloadOutlined />}
+          onClick={handleRefreshPrice}
+          loading={refreshingPrice}
+        >
+          刷新行情
+        </Button>
+      </div>
       <Row gutter={[16, 24]}>
         <Col span={8}>
           <Card>

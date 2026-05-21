@@ -23,3 +23,6 @@ export const getPositions = () =>
 
 export const getClosedPositions = () =>
   client.get<PositionDto[]>('/positions/closed');
+
+export const refreshPositions = () =>
+  client.post<{ message: string; updated: number }>('/positions/refresh');
