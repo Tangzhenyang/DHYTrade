@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<TradeRecord> TradeRecords => Set<TradeRecord>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<Bulletin> Bulletins => Set<Bulletin>();
+    public DbSet<SystemConfig> SystemConfigs => Set<SystemConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

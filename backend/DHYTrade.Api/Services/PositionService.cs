@@ -19,14 +19,15 @@ public class PositionService
             .Where(p => p.IsActive)
             .ToListAsync();
 
-        var totalCost = positions.Sum(p => p.TotalCost);
+        var config = await _db.SystemConfigs.FindAsync("BaseCapital");
+        var baseCapital = config != null && decimal.TryParse(config.Value, out var v) ? v : positions.Sum(p => p.TotalCost);
 
         return positions.Select(p => new PositionDto(
             p.Id, p.StockCode, p.StockName,
             p.Shares, p.TotalCost, p.AvgCost,
             p.CurrentPrice, p.MarketValue,
             p.UnrealizedPnl, p.UnrealizedPnlPct,
-            totalCost > 0 ? p.TotalCost / totalCost * 100 : 0,
+            baseCapital > 0 ? p.TotalCost / baseCapital * 100 : 0,
             p.HoldDays, p.FirstBoughtAt, p.LastTradedAt,
             p.IsActive
         )).OrderByDescending(p => p.RatioPct).ToList();

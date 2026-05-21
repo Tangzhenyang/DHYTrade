@@ -31,7 +31,8 @@ public class CopyController : ControllerBase
         if (!positions.Any())
             return BadRequest(new { message = "当前没有持仓" });
 
-        var totalCost = positions.Sum(p => p.TotalCost);
+        var config = await _db.SystemConfigs.FindAsync("BaseCapital");
+        var baseCapital = config != null && decimal.TryParse(config.Value, out var v) ? v : positions.Sum(p => p.TotalCost);
         var stockCodes = positions.Select(p => p.StockCode).ToList();
         var quotes = await _quote.GetQuotesAsync(stockCodes);
 
@@ -40,7 +41,7 @@ public class CopyController : ControllerBase
         {
             var quote = quotes.FirstOrDefault(q => q.StockCode == pos.StockCode);
             var price = quote?.CurrentPrice ?? pos.CurrentPrice;
-            var ratio = pos.TotalCost / totalCost;
+            var ratio = pos.TotalCost / baseCapital;
             var targetAmount = request.OwnCapital * ratio;
             var suggestLots = (int)Math.Floor(targetAmount / price / 100);
             var actualAmount = suggestLots * 100 * price;

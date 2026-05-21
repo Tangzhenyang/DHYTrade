@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
-import { Row, Col, Card, Statistic, Table, Spin } from 'antd';
+import { useEffect, useState } from 'react';
+import { Row, Col, Card, Statistic, Table, Spin, Button, InputNumber, message, Space } from 'antd';
 import {
-  DollarOutlined, PieChartOutlined, RiseOutlined, ArrowDownOutlined
+  DollarOutlined, PieChartOutlined, RiseOutlined, ArrowDownOutlined, EditOutlined
 } from '@ant-design/icons';
 import ReactECharts from 'echarts-for-react';
 import { usePositionStore } from '../stores/positionStore';
+import { useAuthStore } from '../stores/authStore';
+import { setBaseCapital } from '../api/config';
 import type { PositionDto } from '../api/positions';
 
 const columns = [
@@ -45,9 +47,28 @@ const columns = [
 ];
 
 export default function DashboardPage() {
-  const { positions, loading, totalCost, totalMarketValue, totalPnl, refresh } = usePositionStore();
+  const { positions, loading, totalCost, totalMarketValue, totalPnl, baseCapital, refresh } = usePositionStore();
+  const { user } = useAuthStore();
+  const isOperator = user?.role === 'SuperAdmin' || user?.role === 'Operator';
+  const [editing, setEditing] = useState(false);
+  const [capitalInput, setCapitalInput] = useState(baseCapital);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await setBaseCapital(capitalInput);
+      message.success('基准仓位已更新');
+      setEditing(false);
+      refresh();
+    } catch {
+      message.error('保存失败');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const pieOption = {
     title: { text: '仓位占比', left: 'center' },
@@ -67,8 +88,40 @@ export default function DashboardPage() {
     <Spin spinning={loading}>
       <Row gutter={[16, 24]}>
         <Col span={8}>
-          <Card><Statistic title="基准仓位" value={totalCost} precision={0}
-            prefix={<DollarOutlined />} suffix="元" />
+          <Card>
+            {editing ? (
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Statistic title="基准仓位" value={capitalInput} precision={0}
+                  prefix={<DollarOutlined />} suffix="元" />
+                <InputNumber
+                  value={capitalInput}
+                  onChange={(v) => setCapitalInput(v || 0)}
+                  min={1}
+                  step={100000}
+                  style={{ width: '100%' }}
+                  formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={(v) => Number(v!.replace(/,/g, ''))}
+                />
+                <Space>
+                  <Button size="small" type="primary" loading={saving} onClick={handleSave}>保存</Button>
+                  <Button size="small" onClick={() => setEditing(false)}>取消</Button>
+                </Space>
+              </Space>
+            ) : (
+              <>
+                <Statistic title="基准仓位" value={baseCapital} precision={0}
+                  prefix={<DollarOutlined />} suffix="元" />
+                {isOperator && (
+                  <Button
+                    type="link" size="small" icon={<EditOutlined />}
+                    style={{ marginTop: 8 }}
+                    onClick={() => { setCapitalInput(baseCapital); setEditing(true); }}
+                  >
+                    设置
+                  </Button>
+                )}
+              </>
+            )}
           </Card>
         </Col>
         <Col span={8}>
