@@ -10,6 +10,12 @@ RUN npm run build
 FROM nginx:1.29-alpine AS final
 WORKDIR /usr/share/nginx/html
 
+ENV TZ=Asia/Shanghai
+
+RUN apk add --no-cache tzdata \
+	&& ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
+	&& echo $TZ > /etc/timezone
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist ./
 

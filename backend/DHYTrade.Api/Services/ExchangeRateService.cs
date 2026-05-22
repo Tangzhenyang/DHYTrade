@@ -26,19 +26,11 @@ public class ExchangeRateService : IExchangeRateService
             || cnyRate <= 0)
             throw new InvalidOperationException("无法获取港币兑人民币汇率");
 
-        var quoteTime = DateTime.UtcNow;
-        if (root.TryGetProperty("time_last_update_utc", out var quoteTimeElement)
-            && quoteTimeElement.ValueKind == JsonValueKind.String
-            && DateTime.TryParse(quoteTimeElement.GetString(), out var parsedQuoteTime))
-        {
-            quoteTime = parsedQuoteTime;
-        }
-
         return new ExchangeRateResult(
             "HKD",
             "CNY",
             cnyRate,
-            quoteTime
+            DateTime.UtcNow
         );
     }
 }

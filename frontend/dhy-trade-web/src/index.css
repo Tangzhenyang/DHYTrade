@@ -280,6 +280,14 @@ input[type='number'] {
   background: var(--bg-soft) !important;
 }
 
+.ant-table-tbody > tr.ant-table-measure-row,
+.ant-table-tbody > tr.ant-table-measure-row > td {
+  padding: 0 !important;
+  height: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
 .ant-btn {
   border-radius: var(--radius-sm) !important;
   height: 38px;

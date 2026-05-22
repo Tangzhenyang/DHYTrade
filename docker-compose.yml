@@ -8,6 +8,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://0.0.0.0:5000
+      TZ: Asia/Shanghai
       ConnectionStrings__Default: Data Source=/app/data/DHYTrade.db
       Jwt__Secret: ${JWT_SECRET:-Change-This-Secret-In-Production-At-Least-32-Chars}
       Jwt__Issuer: ${JWT_ISSUER:-DHYTrade}
@@ -24,6 +25,8 @@ services:
       dockerfile: Dockerfile
     container_name: dhytrade-frontend
     restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
     depends_on:
       - backend
     ports:

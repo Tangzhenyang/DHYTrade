@@ -17,7 +17,10 @@ public class PositionService
     public async Task<List<PositionDto>> GetActivePositionsAsync()
     {
         var positions = await _db.Positions
-            .Where(p => p.IsActive)
+            .Where(p => p.IsActive
+                && p.Shares > 0
+                && !string.IsNullOrWhiteSpace(p.StockCode)
+                && !string.IsNullOrWhiteSpace(p.StockName))
             .ToListAsync();
 
         var configs = await _db.SystemConfigs

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Row, Col, Card, Statistic, Table, Spin, Button, InputNumber, App, Space, Empty, Modal, Typography } from 'antd';
 import {
   EditOutlined, ReloadOutlined, GlobalOutlined
@@ -56,6 +56,27 @@ function formatMoney(value: number, marketType: MarketType, digits = 0) {
   })}`;
 }
 
+function normalizeUtcLikeDate(value: string) {
+  if (/[zZ]$|[+-]\d{2}:\d{2}$/.test(value)) {
+    return value;
+  }
+
+  return `${value}Z`;
+}
+
+function formatShanghaiDateTime(value: string) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(new Date(normalizeUtcLikeDate(value)));
+}
+
 function getColumns(marketType: MarketType) {
   return [
     { title: '股票', dataIndex: 'stockName', key: 'name', width: 120 },
@@ -111,16 +132,26 @@ export default function DashboardPage() {
   const [savingMarket, setSavingMarket] = useState<MarketType | null>(null);
   const [editingMarket, setEditingMarket] = useState<MarketType | null>(null);
   const [refreshingPrice, setRefreshingPrice] = useState(false);
+  const [refreshingExchangeRate, setRefreshingExchangeRate] = useState(false);
   const [exchangeRate, setExchangeRate] = useState<ExchangeRateDto | null>(null);
+  const [lastMarketRefreshAt, setLastMarketRefreshAt] = useState<string | null>(null);
   const [exchangeRateModalOpen, setExchangeRateModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const refreshingPriceRef = useRef(false);
   const [capitalInputs, setCapitalInputs] = useState<Record<MarketType, number>>({
     AShare: 0,
     HongKong: 0,
   });
   const { message } = App.useApp();
 
-  useEffect(() => { refresh(); }, [refresh]);
+  const refreshMarketData = async () => {
+    await refresh();
+    setLastMarketRefreshAt(new Date().toISOString());
+  };
+
+  useEffect(() => {
+    void refreshMarketData();
+  }, [refresh]);
 
   useEffect(() => {
     const loadExchangeRate = async () => {
@@ -134,6 +165,25 @@ export default function DashboardPage() {
 
     void loadExchangeRate();
   }, []);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState !== 'visible' || refreshingPriceRef.current) {
+        return;
+      }
+
+      refreshingPriceRef.current = true;
+
+      void refreshPositions()
+        .then(() => refreshMarketData())
+        .catch(() => {})
+        .finally(() => {
+          refreshingPriceRef.current = false;
+        });
+    }, 30000);
+
+    return () => window.clearInterval(intervalId);
+  }, [refresh]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -200,18 +250,37 @@ export default function DashboardPage() {
   }), [exchangeRate?.rate, marketSummaries]);
 
   const handleRefreshPrice = async () => {
+    if (refreshingPriceRef.current) {
+      return;
+    }
+
+    refreshingPriceRef.current = true;
     setRefreshingPrice(true);
     try {
-      const res = await refreshPositions();
-      if (res.data.exchangeRate) {
-        setExchangeRate(res.data.exchangeRate);
-      }
-      message.success(res.data.message);
-      refresh();
+      await refreshPositions();
+      await refreshMarketData();
+      message.success('行情已刷新');
     } catch (error) {
       message.error(getErrorMessage(error, '刷新失败，请检查后端服务'));
     } finally {
+      refreshingPriceRef.current = false;
       setRefreshingPrice(false);
+    }
+  };
+
+  const handleRefreshExchangeRate = async () => {
+    setRefreshingExchangeRate(true);
+    try {
+      const response = await getExchangeRate();
+      setExchangeRate({
+        ...response.data,
+        quoteTime: new Date().toISOString(),
+      });
+      message.success('汇率已更新');
+    } catch (error) {
+      message.error(getErrorMessage(error, '汇率更新失败，请稍后重试'));
+    } finally {
+      setRefreshingExchangeRate(false);
     }
   };
 
@@ -264,7 +333,12 @@ export default function DashboardPage() {
 
       <Card className="animate-in stagger-1" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', marginBottom: 24 }}>
         <Space direction="vertical" size={16} style={{ width: '100%' }}>
-          <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>总览</h3>
+          <div>
+            <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>总览</h3>
+            <div style={{ color: 'var(--text-secondary)', marginTop: 6, fontSize: 13 }}>
+              最近更新时间：{lastMarketRefreshAt ? formatShanghaiDateTime(lastMarketRefreshAt) : '暂无'}
+            </div>
+          </div>
           <Row gutter={[16, 16]}>
             <Col span={isMobile ? 24 : 8}>
               <Card style={{ background: 'var(--stat-card-bg)', border: '1px solid var(--border-default)' }}>
@@ -439,11 +513,29 @@ export default function DashboardPage() {
               1 人民币 = <strong>{(1 / exchangeRate.rate).toFixed(4)}</strong> 港币
             </Typography.Text>
             <Typography.Text style={{ color: 'var(--text-secondary)' }}>
-              更新时间：{new Date(exchangeRate.quoteTime).toLocaleString()}
+              更新时间：{formatShanghaiDateTime(exchangeRate.quoteTime)}
             </Typography.Text>
+            <Button
+              type="primary"
+              icon={<ReloadOutlined />}
+              onClick={handleRefreshExchangeRate}
+              loading={refreshingExchangeRate}
+            >
+              更新汇率
+            </Button>
           </Space>
         ) : (
-          <Empty description="暂时无法获取汇率" />
+          <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <Empty description="暂时无法获取汇率" />
+            <Button
+              type="primary"
+              icon={<ReloadOutlined />}
+              onClick={handleRefreshExchangeRate}
+              loading={refreshingExchangeRate}
+            >
+              更新汇率
+            </Button>
+          </Space>
         )}
       </Modal>
     </Spin>
