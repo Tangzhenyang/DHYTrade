@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash *)",
+      "Bash(git init *)",
+      "Bash(dotnet *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(dotnet new *)",
+      "Bash(git rm *)",
+      "Bash(git commit *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(kill %1)",
+      "Bash(npx tsc *)",
+      "Bash(git *)",
+      "Bash(curl -s http://localhost:5000/swagger/index.html -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s http://localhost:5001/swagger/index.html -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s http://localhost:50540/swagger/index.html -o /dev/null -w \"%{http_code}\")",
+      "Bash(taskkill //F //IM DHYTrade.Api.exe)",
+      "Bash(dotnet run *)",
+      "Bash(sqlite3 DHYTrade.db \"SELECT StockCode, StockName, Shares FROM Positions WHERE IsActive = 1;\")",
+      "Bash(curl -s -X POST http://localhost:5000/api/positions/refresh -H \"Authorization: Bearer test\")"
+    ]
+  }
+}

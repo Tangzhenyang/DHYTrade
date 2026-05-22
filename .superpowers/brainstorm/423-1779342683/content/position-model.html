@@ -1,0 +1,60 @@
+<h2>仓位管理模型</h2>
+<p class="subtitle">管理员如何设定和调整仓位？这决定了核心数据模型</p>
+
+<div class="options">
+  <div class="option" data-choice="direct-percent" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>直接设定比例</h3>
+      <p>管理员直接为每只股票设定目标占比（如茅台30%、宁德20%），跟仓用户按比例跟。简单直接。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="buy-sell-order" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>买入/清仓操作记录</h3>
+      <p>管理员记录每笔操作（买入XX股票XX金额），系统自动累加计算当前占比。更贴近真实交易。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="hybrid" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>混合模式（推荐）</h3>
+      <p>管理员可以手动调整占比，也可以录入交易操作。系统同时维护"目标占比"和"操作记录"。灵活性最高。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>跟仓计算逻辑（统一，与模式无关）</h3>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">计算示例</div>
+  <div class="mockup-body">
+    <table style="width:100%; border-collapse: collapse; color: #d4d4d8;">
+      <tr style="border-bottom: 2px solid #555;">
+        <th style="padding:8px; text-align:left;">股票</th>
+        <th style="padding:8px; text-align:right;">目标占比</th>
+        <th style="padding:8px; text-align:right;">最新价</th>
+        <th style="padding:8px; text-align:right;">跟仓100万</th>
+        <th style="padding:8px; text-align:right;">建议买入（手）</th>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding:8px;">贵州茅台</td>
+        <td style="padding:8px; text-align:right;">30%</td>
+        <td style="padding:8px; text-align:right;">1,850.00</td>
+        <td style="padding:8px; text-align:right;">300,000</td>
+        <td style="padding:8px; text-align:right;">1手（100股）</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #444;">
+        <td style="padding:8px;">宁德时代</td>
+        <td style="padding:8px; text-align:right;">20%</td>
+        <td style="padding:8px; text-align:right;">210.50</td>
+        <td style="padding:8px; text-align:right;">200,000</td>
+        <td style="padding:8px; text-align:right;">9手（900股）</td>
+      </tr>
+    </table>
+    <p style="margin-top:12px; color:#888; font-size:13px;">建议买入向下取整到整手（A股100股=1手）</p>
+  </div>
+</div>

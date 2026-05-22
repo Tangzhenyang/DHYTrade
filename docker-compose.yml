@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./backend/DHYTrade.Api
+      dockerfile: Dockerfile
+    container_name: dhytrade-backend
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://0.0.0.0:5000
+      ConnectionStrings__Default: Data Source=/app/data/DHYTrade.db
+      Jwt__Secret: ${JWT_SECRET:-Change-This-Secret-In-Production-At-Least-32-Chars}
+      Jwt__Issuer: ${JWT_ISSUER:-DHYTrade}
+      Jwt__AccessTokenExpiryMinutes: ${JWT_ACCESS_TOKEN_EXPIRY_MINUTES:-60}
+      Jwt__RefreshTokenExpiryDays: ${JWT_REFRESH_TOKEN_EXPIRY_DAYS:-30}
+    volumes:
+      - dhytrade-data:/app/data
+    expose:
+      - "5000"
+
+  frontend:
+    build:
+      context: ./frontend/dhy-trade-web
+      dockerfile: Dockerfile
+    container_name: dhytrade-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  dhytrade-data:

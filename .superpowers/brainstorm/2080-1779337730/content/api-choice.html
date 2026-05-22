@@ -1,0 +1,49 @@
+<h2>选择免费股票行情API</h2>
+<p class="subtitle">不同API覆盖的市场和特性不同</p>
+
+<div class="options">
+  <div class="option" data-choice="sina" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>新浪财经 API</h3>
+      <p>覆盖沪深A股、港股，免费无限制，实时性好。适合纯A股场景。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="eastmoney" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>东方财富 API</h3>
+      <p>覆盖沪深A股、港股、美股，数据全面，免费。需要处理请求频率限制。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="yahoo" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Yahoo Finance API</h3>
+      <p>全球市场覆盖，免费但有速率限制。对A股实时性不如国内源。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="composite" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>组合策略（推荐）</h3>
+      <p>默认用新浪/东方财富覆盖A股，同时预留Yahoo Finance接口用于美股扩展。后端通过统一接口抽象，方便切换。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>推荐理由</h3>
+</div>
+
+<div class="pros-cons">
+  <div class="pros"><h4>方案D（组合策略）</h4><ul>
+    <li>A股走国内源，实时性最好</li>
+    <li>后端做接口抽象，随时换数据源</li>
+    <li>为未来扩展美股留好通道</li>
+  </ul></div>
+  <div class="cons"><h4>需要考虑</h4><ul>
+    <li>需要实现一个简单的行情适配层</li>
+    <li>不同数据源格式不同，需要做标准化</li>
+  </ul></div>
+</div>
