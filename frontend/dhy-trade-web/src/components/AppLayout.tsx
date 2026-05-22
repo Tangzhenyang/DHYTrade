@@ -13,6 +13,24 @@ import { useTheme } from '../contexts/ThemeContext';
 
 const { Header, Sider, Content } = Layout;
 
+function YellowCroakerIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="croaker-body" x1="6" y1="8" x2="25" y2="24" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FFD76A" />
+          <stop offset="1" stopColor="#F3A61B" />
+        </linearGradient>
+      </defs>
+      <path d="M7 16C7 11.6 11.2 8 16.6 8C20.1 8 23.1 9.5 24.8 11.7L28 10L26.8 14L29 16L26.8 18L28 22L24.8 20.3C23.1 22.5 20.1 24 16.6 24C11.2 24 7 20.4 7 16Z" fill="url(#croaker-body)" stroke="#C88408" strokeWidth="1.4" strokeLinejoin="round"/>
+      <path d="M13.5 12.2L11.4 9.8L15.2 10.6L13.5 12.2Z" fill="#F7C94A" stroke="#C88408" strokeWidth="1" strokeLinejoin="round"/>
+      <path d="M13.5 19.8L11.4 22.2L15.2 21.4L13.5 19.8Z" fill="#F7C94A" stroke="#C88408" strokeWidth="1" strokeLinejoin="round"/>
+      <circle cx="11.7" cy="15" r="1.35" fill="#24324A" />
+      <path d="M16.2 16.8C17.2 17.6 18.7 17.6 19.7 16.8" stroke="#A76500" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -76,20 +94,21 @@ export default function AppLayout() {
       borderBottom: '1px solid var(--border-default)',
     }}>
       <div style={{
-        width: 32, height: 32,
-        background: 'linear-gradient(135deg, var(--accent), #4fc3f7)',
-        borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', fontWeight: 800, fontSize: 16,
-        color: '#ffffff', fontFamily: 'var(--font-sans)',
+        width: 40, height: 40,
+        borderRadius: '50%', display: 'flex', alignItems: 'center',
+        justifyContent: 'center',
         flexShrink: 0,
-        boxShadow: '0 4px 12px var(--bg-glow)',
-      }}>跟</div>
+        background: 'radial-gradient(circle at 30% 30%, rgba(255, 215, 106, 0.28), rgba(243, 166, 27, 0.08))',
+        boxShadow: '0 10px 24px rgba(243, 166, 27, 0.18)',
+      }}>
+        <YellowCroakerIcon />
+      </div>
       {(!collapsed || isMobile) && (
         <Typography.Text strong style={{
           color: 'var(--text-primary)', fontSize: 16,
           fontFamily: 'var(--font-sans)', letterSpacing: 1.5,
           fontWeight: 700,
-        }}>跟仓系统</Typography.Text>
+        }}>大黄鱼跟仓系统</Typography.Text>
       )}
     </div>
   );
