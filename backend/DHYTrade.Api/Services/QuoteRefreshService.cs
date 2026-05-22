@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using DHYTrade.Api.Data;
+using DHYTrade.Api.Models.Entities;
 
 namespace DHYTrade.Api.Services;
 
@@ -39,11 +40,7 @@ public class QuoteRefreshService : BackgroundService
                     foreach (var pos in positions)
                     {
                         var matchedQuote = quotes.FirstOrDefault(q =>
-                        {
-                            var qCode = q.StockCode.Replace("sh", "").Replace("sz", "");
-                            var pCode = pos.StockCode.Replace("sh", "").Replace("sz", "");
-                            return qCode == pCode;
-                        });
+                            q.StockCode.NormalizeStockCode() == pos.StockCode.NormalizeStockCode());
 
                         if (matchedQuote != null)
                         {

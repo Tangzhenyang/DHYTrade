@@ -32,3 +32,13 @@ public record UserDto(
     bool IsActive,
     DateTime CreatedAt
 );
+
+public record UpdateEmailRequest(
+    [Required, EmailAddress, MaxLength(100)] string Email,
+    [Required] string CurrentPassword
+);
+
+public record UpdatePasswordRequest(
+    [Required] string CurrentPassword,
+    [Required, MinLength(6)] string NewPassword
+);

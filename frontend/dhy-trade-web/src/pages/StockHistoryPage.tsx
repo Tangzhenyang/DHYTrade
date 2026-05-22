@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { Card, Table, Typography, Row, Col, Statistic } from 'antd';
 import dayjs from 'dayjs';
 import { getStockPnlDetail } from '../api/history';
-import type { StockPnlDetail, PnlItem } from '../api/history';
+import type { StockPnlDetail } from '../api/history';
+import { PnlValue, getPnlClassName } from '../components/PnlValue';
 
 const columns = [
   {
@@ -27,9 +28,7 @@ const columns = [
   {
     title: '盈亏', dataIndex: 'pnl', key: 'pnl',
     render: (v: number) => (
-      <span className={v >= 0 ? 'pnl-up' : 'pnl-down'} style={{ fontFamily: 'var(--font-mono)' }}>
-        {v >= 0 ? '+' : ''}{v.toLocaleString()}
-      </span>
+      <PnlValue value={v} text={v.toLocaleString()} />
     )
   },
 ];
@@ -67,6 +66,7 @@ export default function StockHistoryPage() {
         </Col>
         <Col span={isMobile ? 12 : 6}>
           <Statistic title="已实现盈亏" value={detail.totalRealizedPnl} precision={0}
+            prefix={<span className={getPnlClassName(detail.totalRealizedPnl)} style={{ fontFamily: 'var(--font-mono)' }}>{detail.totalRealizedPnl >= 0 ? '▲' : '▼'}</span>}
             valueStyle={{
               color: detail.totalRealizedPnl >= 0 ? 'var(--positive)' : 'var(--negative)',
               fontFamily: 'var(--font-mono)'

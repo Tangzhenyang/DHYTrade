@@ -6,20 +6,14 @@ import type { PositionDto } from '../api/positions';
 interface PositionState {
   positions: PositionDto[];
   loading: boolean;
-  totalCost: number;
-  totalMarketValue: number;
-  totalPnl: number;
-  baseCapital: number;
+  configMap: Record<string, number>;
   refresh: () => Promise<void>;
 }
 
 export const usePositionStore = create<PositionState>((set) => ({
   positions: [],
   loading: false,
-  totalCost: 0,
-  totalMarketValue: 0,
-  totalPnl: 0,
-  baseCapital: 0,
+  configMap: {},
 
   refresh: async () => {
     set({ loading: true });
@@ -27,13 +21,13 @@ export const usePositionStore = create<PositionState>((set) => ({
       const [posRes, cfgRes] = await Promise.all([getPositions(), getConfigs()]);
       const positions = posRes.data;
       const configs = cfgRes.data;
-      const bc = configs.find((c: any) => c.key === 'BaseCapital');
+      const configMap = Object.fromEntries(
+        configs.map((config) => [config.key, Number(config.value)])
+      );
+
       set({
         positions,
-        totalCost: positions.reduce((s, p) => s + p.totalCost, 0),
-        totalMarketValue: positions.reduce((s, p) => s + p.marketValue, 0),
-        totalPnl: positions.reduce((s, p) => s + p.unrealizedPnl, 0),
-        baseCapital: bc ? Number(bc.value) : positions.reduce((s, p) => s + p.totalCost, 0),
+        configMap,
         loading: false,
       });
     } catch {

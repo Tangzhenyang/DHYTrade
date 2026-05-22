@@ -29,12 +29,12 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Position>(e =>
         {
-            e.HasIndex(p => p.StockCode).IsUnique();
+            e.HasIndex(p => new { p.MarketType, p.StockCode }).IsUnique();
         });
 
         modelBuilder.Entity<TradeRecord>(e =>
         {
-            e.HasIndex(t => t.StockCode);
+            e.HasIndex(t => new { t.MarketType, t.StockCode });
             e.HasIndex(t => t.TradedAt);
             e.HasIndex(t => t.OperatorId);
         });

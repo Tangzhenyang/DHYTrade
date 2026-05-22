@@ -49,8 +49,10 @@ public class SinaQuoteProvider : IQuoteProvider
 
     private static string ToSinaCode(string code)
     {
-        if (code.StartsWith("sh")) return code;
-        if (code.StartsWith("sz")) return code;
+        if (code.StartsWith("sh", StringComparison.OrdinalIgnoreCase)) return code.ToLowerInvariant();
+        if (code.StartsWith("sz", StringComparison.OrdinalIgnoreCase)) return code.ToLowerInvariant();
+        if (code.StartsWith("hk", StringComparison.OrdinalIgnoreCase)) return code.ToLowerInvariant();
+        if (code.Length == 5 && code.All(char.IsDigit)) return "hk" + code;
         if (code.StartsWith("6")) return "sh" + code;
         return "sz" + code;
     }
@@ -63,19 +65,43 @@ public class SinaQuoteProvider : IQuoteProvider
             var nameEnd = line.IndexOf('"', nameStart + 1);
             if (nameStart < 0 || nameEnd < 0) return null;
 
-            var namePart = line[..nameStart];
-            var eqIdx = namePart.IndexOf('=');
-            var sinaCode = namePart[(eqIdx - 8)..eqIdx];
+            const string prefix = "var hq_str_";
+            var codeStart = line.IndexOf(prefix, StringComparison.Ordinal);
+            var eqIdx = line.IndexOf('=');
+            if (codeStart < 0 || eqIdx < 0) return null;
+
+            var sinaCode = line[(codeStart + prefix.Length)..eqIdx];
 
             var data = line[(nameStart + 1)..nameEnd].Split(',');
             if (data.Length < 4) return null;
 
+            if (sinaCode.StartsWith("hk", StringComparison.OrdinalIgnoreCase))
+            {
+                if (data.Length < 7) return null;
+
+                var hkName = data[1];
+                var hkYestClose = decimal.Parse(data[3], CultureInfo.InvariantCulture);
+                var hkPrice = decimal.Parse(data[6], CultureInfo.InvariantCulture);
+
+                if (hkPrice == 0) hkPrice = hkYestClose;
+
+                return new QuoteResult(
+                    sinaCode.ToLowerInvariant(), hkName, hkPrice,
+                    hkPrice - hkYestClose,
+                    0, DateTime.Now
+                );
+            }
+
             var name = data[0];
             var price = decimal.Parse(data[3], CultureInfo.InvariantCulture);
+            var yestClose = decimal.Parse(data[2], CultureInfo.InvariantCulture);
+
+            // 停牌或盘前时，现价可能为0，此时取昨收盘价
+            if (price == 0) price = yestClose;
 
             return new QuoteResult(
-                sinaCode, name, price,
-                price - decimal.Parse(data[2], CultureInfo.InvariantCulture),
+                sinaCode.ToLowerInvariant(), name, price,
+                price - yestClose,
                 0, DateTime.Now
             );
         }

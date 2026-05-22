@@ -2,6 +2,7 @@ namespace DHYTrade.Api.Models.DTOs;
 
 public record PositionDto(
     Guid Id,
+    string MarketType,
     string StockCode,
     string StockName,
     int Shares,

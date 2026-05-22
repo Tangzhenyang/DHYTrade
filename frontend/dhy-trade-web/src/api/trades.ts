@@ -1,7 +1,9 @@
 import client from './client';
+import type { MarketType } from '../constants/markets';
 
 export interface TradeRecordDto {
   id: string;
+  marketType: MarketType;
   stockCode: string;
   stockName: string;
   type: 'Buy' | 'Sell';
@@ -18,6 +20,7 @@ export interface TradeRecordDto {
 }
 
 export interface AddTradeRequest {
+  marketType: MarketType;
   stockCode: string;
   stockName: string;
   type: 'Buy' | 'Sell';
@@ -26,6 +29,8 @@ export interface AddTradeRequest {
   note?: string;
   tradedAt?: string;
 }
+
+export type UpdateTradeRequest = AddTradeRequest;
 
 export const getTrades = (params?: {
   stockCode?: string;
@@ -36,6 +41,9 @@ export const getTrades = (params?: {
 
 export const addTrade = (data: AddTradeRequest) =>
   client.post<TradeRecordDto>('/trades', data);
+
+export const updateTrade = (id: string, data: UpdateTradeRequest) =>
+  client.put<TradeRecordDto>(`/trades/${id}`, data);
 
 export const deleteTrade = (id: string) =>
   client.delete(`/trades/${id}`);

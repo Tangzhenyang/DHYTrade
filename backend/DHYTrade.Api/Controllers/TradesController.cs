@@ -45,6 +45,25 @@ public class TradesController : ControllerBase
         }
     }
 
+    [HttpPut("{id}")]
+    [Authorize(Policy = "Operator+")]
+    public async Task<IActionResult> UpdateTrade(Guid id, [FromBody] UpdateTradeRequest request)
+    {
+        try
+        {
+            var trade = await _tradeService.UpdateTradeAsync(id, request);
+            return Ok(trade);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpDelete("{id}")]
     [Authorize(Policy = "Operator+")]
     public async Task<IActionResult> DeleteTrade(Guid id)

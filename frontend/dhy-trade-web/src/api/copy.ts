@@ -1,4 +1,5 @@
 import client from './client';
+import type { MarketType } from '../constants/markets';
 
 export interface CopyResultItem {
   stockCode: string;
@@ -16,5 +17,5 @@ export interface CopyCalculateResponse {
   items: CopyResultItem[];
 }
 
-export const calculateCopy = (ownCapital: number) =>
-  client.post<CopyCalculateResponse>('/copy/calculate', { ownCapital });
+export const calculateCopy = (marketType: MarketType, ownCapital: number) =>
+  client.post<CopyCalculateResponse>('/copy/calculate', { marketType, ownCapital });

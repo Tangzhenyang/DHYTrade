@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, Table } from 'antd';
 import { getAllStocksPnl } from '../api/history';
 import type { StockPnlSummary } from '../api/history';
+import { PnlValue } from '../components/PnlValue';
 
 const columns = [
   { title: '股票', dataIndex: 'stockName', key: 'name' },
@@ -18,9 +19,7 @@ const columns = [
   {
     title: '已实现盈亏', dataIndex: 'totalRealizedPnl', key: 'pnl',
     render: (v: number) => (
-      <span className={v >= 0 ? 'pnl-up' : 'pnl-down'} style={{ fontFamily: 'var(--font-mono)' }}>
-        {v >= 0 ? '+' : ''}{v.toLocaleString()}
-      </span>
+      <PnlValue value={v} text={v.toLocaleString()} />
     )
   },
   { title: '交易次数', dataIndex: 'tradeCount', key: 'count' },

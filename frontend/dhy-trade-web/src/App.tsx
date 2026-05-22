@@ -14,6 +14,7 @@ import HistoryPage from './pages/HistoryPage';
 import StockHistoryPage from './pages/StockHistoryPage';
 import UsersPage from './pages/UsersPage';
 import InvitesPage from './pages/InvitesPage';
+import ProfilePage from './pages/ProfilePage';
 
 function ThemedApp() {
   const { theme } = useTheme();
@@ -24,14 +25,14 @@ function ThemedApp() {
       theme={{
         algorithm: theme === 'dark' ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
         token: {
-          fontFamily: "'Noto Sans SC', -apple-system, sans-serif",
-          borderRadius: 2,
-          colorPrimary: '#c4953c',
-          colorBgContainer: theme === 'dark' ? '#12171f' : '#ffffff',
-          colorBgElevated: theme === 'dark' ? '#181e2a' : '#faf8f5',
-          colorBorder: theme === 'dark' ? '#1e2836' : '#e2ddd4',
-          colorText: theme === 'dark' ? '#c8cfda' : '#1a1814',
-          colorTextSecondary: theme === 'dark' ? '#6e7685' : '#6b6357',
+          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans SC', sans-serif",
+          borderRadius: 10,
+          colorPrimary: theme === 'dark' ? '#0a84ff' : '#0066cc',
+          colorBgContainer: theme === 'dark' ? 'rgba(30, 30, 35, 0.75)' : 'rgba(255, 255, 255, 0.75)',
+          colorBgElevated: theme === 'dark' ? 'rgba(40, 40, 45, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          colorBorder: theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+          colorText: theme === 'dark' ? '#f5f5f7' : '#1d1d1f',
+          colorTextSecondary: theme === 'dark' ? '#a1a1a6' : '#86868b',
         },
       }}
     >
@@ -52,6 +53,7 @@ function ThemedApp() {
               <Route path="bulletin" element={<BulletinPage />} />
               <Route path="history" element={<HistoryPage />} />
               <Route path="history/:stockCode" element={<StockHistoryPage />} />
+              <Route path="profile" element={<ProfilePage />} />
               <Route path="admin/users" element={
                 <ProtectedRoute roles={['SuperAdmin']}>
                   <UsersPage />

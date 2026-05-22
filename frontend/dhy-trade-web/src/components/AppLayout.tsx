@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Button, Typography, Dropdown, Drawer, Switch, Space } from 'antd';
+import { Layout, Menu, Button, Typography, Dropdown, Drawer, Space } from 'antd';
 import {
   DashboardOutlined, SwapOutlined, CalculatorOutlined,
   SoundOutlined, HistoryOutlined, UserOutlined,
   TeamOutlined, KeyOutlined, LogoutOutlined,
   MenuFoldOutlined, MenuUnfoldOutlined, MenuOutlined,
-  SunOutlined, MoonOutlined
+  SunOutlined, MoonOutlined, SettingOutlined
 } from '@ant-design/icons';
 import { useAuthStore } from '../stores/authStore';
 import { useTheme } from '../contexts/ThemeContext';
@@ -60,43 +60,42 @@ export default function AppLayout() {
 
   const userMenu = {
     items: [
-      {
-        key: 'theme',
-        icon: theme === 'dark' ? <SunOutlined /> : <MoonOutlined />,
-        label: `切换${theme === 'dark' ? '亮色' : '暗色'}主题`,
-        onClick: toggleTheme,
-      },
-      { type: 'divider' as const },
       { key: 'role', label: `角色：${user?.role}`, disabled: true },
+      { key: 'profile', icon: <SettingOutlined />, label: '个人中心', onClick: () => navigate('/profile') },
+      { type: 'divider' as const },
       { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', danger: true, onClick: handleLogout },
     ],
   };
 
   const logo = (
     <div style={{
-      height: 48, display: 'flex', alignItems: 'center',
+      height: 56, display: 'flex', alignItems: 'center',
       justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
       paddingLeft: collapsed && !isMobile ? 0 : 20,
-      gap: 10,
+      gap: 12,
+      borderBottom: '1px solid var(--border-default)',
     }}>
       <div style={{
-        width: 28, height: 28, background: 'var(--accent)',
-        borderRadius: 4, display: 'flex', alignItems: 'center',
-        justifyContent: 'center', fontWeight: 700, fontSize: 14,
-        color: 'var(--accent-text)', fontFamily: 'var(--font-mono)',
+        width: 32, height: 32,
+        background: 'linear-gradient(135deg, var(--accent), #4fc3f7)',
+        borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', fontWeight: 800, fontSize: 16,
+        color: '#ffffff', fontFamily: 'var(--font-sans)',
         flexShrink: 0,
+        boxShadow: '0 4px 12px var(--bg-glow)',
       }}>跟</div>
       {(!collapsed || isMobile) && (
         <Typography.Text strong style={{
           color: 'var(--text-primary)', fontSize: 16,
-          fontFamily: 'var(--font-mono)', letterSpacing: 2,
-        }}>跟仓</Typography.Text>
+          fontFamily: 'var(--font-sans)', letterSpacing: 1.5,
+          fontWeight: 700,
+        }}>跟仓系统</Typography.Text>
       )}
     </div>
   );
 
   const menuComponent = (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {logo}
       <Menu
         style={{ marginTop: 16, background: 'transparent', borderInlineEnd: 'none' }}
@@ -105,7 +104,7 @@ export default function AppLayout() {
         items={menuItems}
         onClick={({ key }) => handleNav(key)}
       />
-    </>
+    </div>
   );
 
   return (
@@ -141,15 +140,15 @@ export default function AppLayout() {
 
       {/* Main content area */}
       <Layout style={{
-        marginLeft: isMobile ? 0 : (collapsed ? 64 : 240),
-        transition: 'margin-left 0.2s',
+        marginLeft: isMobile ? 0 : (collapsed ? 80 : 240),
+        transition: 'margin-left 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
       }}>
         <Header style={{
-          padding: '0 16px',
+          padding: '0 24px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          height: 52,
+          height: 56,
           position: 'sticky',
           top: 0,
           zIndex: 9,
@@ -164,30 +163,100 @@ export default function AppLayout() {
                 onClick={() => setCollapsed(!collapsed)}
               />
             )}
-            {/* Mobile theme toggle */}
-            {isMobile && (
-              <Button
-                type="text"
-                icon={theme === 'dark' ? <SunOutlined /> : <MoonOutlined />}
-                onClick={toggleTheme}
-                title="切换主题"
-              />
-            )}
           </Space>
 
-          <Dropdown menu={userMenu} placement="bottomRight" trigger={['click']}>
-            <Button type="text" icon={<UserOutlined />} style={{ color: 'var(--text-primary)' }}>
-              <span className="hide-mobile">{user?.username}</span>
-            </Button>
-          </Dropdown>
+          <Space size={16}>
+            {/* Elegant Sun / Moon Dynamic Toggle styled like Apple & Windows 11 */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: 'var(--bg-soft)',
+              padding: '3px',
+              borderRadius: 999,
+              border: '1px solid var(--border-default)',
+              position: 'relative',
+              cursor: 'pointer',
+              userSelect: 'none',
+              height: 32,
+              width: 60,
+            }} onClick={toggleTheme} title={`切换到${theme === 'dark' ? '亮色' : '暗色'}主题`}>
+              <div style={{
+                display: 'flex',
+                gap: 6,
+                position: 'relative',
+                zIndex: 1,
+                width: '100%',
+                justifyContent: 'space-between',
+                padding: '0 4px',
+              }}>
+                <div style={{
+                  width: 20,
+                  height: 20,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: theme === 'light' ? 'var(--accent)' : 'var(--text-muted)',
+                  transition: 'color 0.2s',
+                }}>
+                  <SunOutlined style={{ fontSize: 13 }} />
+                </div>
+                <div style={{
+                  width: 20,
+                  height: 20,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: theme === 'dark' ? 'var(--accent)' : 'var(--text-muted)',
+                  transition: 'color 0.2s',
+                }}>
+                  <MoonOutlined style={{ fontSize: 12 }} />
+                </div>
+              </div>
+              {/* Active sliding indicators inside pill */}
+              <div style={{
+                position: 'absolute',
+                top: 2,
+                left: theme === 'light' ? 2 : 30,
+                width: 26,
+                height: 26,
+                borderRadius: '50%',
+                background: 'var(--bg-elevated)',
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
+                border: '1px solid var(--border-default)',
+                transition: 'left 0.28s cubic-bezier(0.25, 1, 0.5, 1)',
+                zIndex: 0,
+              }} />
+            </div>
+
+            <Dropdown menu={userMenu} placement="bottomRight" trigger={['click']}>
+              <Button 
+                type="text" 
+                icon={<UserOutlined />} 
+                style={{ 
+                  color: 'var(--text-primary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: 32,
+                  padding: '4px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--bg-soft)',
+                  border: '1px solid var(--border-default)',
+                }}
+              >
+                <span className="hide-mobile" style={{ marginLeft: 4 }}>{user?.username}</span>
+              </Button>
+            </Dropdown>
+          </Space>
         </Header>
 
         <Content style={{
-          margin: isMobile ? 12 : 20,
-          padding: isMobile ? 12 : 20,
+          margin: isMobile ? 12 : 24,
+          padding: isMobile ? 16 : 24,
           background: 'var(--bg-surface)',
-          borderRadius: 8,
+          borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border-default)',
+          boxShadow: 'var(--shadow-card)',
+          backdropFilter: 'var(--panel-blur)',
           minHeight: 280,
         }}>
           <Outlet />

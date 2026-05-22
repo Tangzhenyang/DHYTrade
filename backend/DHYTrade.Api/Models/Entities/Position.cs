@@ -9,6 +9,9 @@ public class Position
     [Key]
     public Guid Id { get; set; } = Guid.NewGuid();
 
+    [Required]
+    public MarketType MarketType { get; set; } = MarketType.AShare;
+
     [Required, MaxLength(20)]
     public string StockCode { get; set; } = string.Empty;
 

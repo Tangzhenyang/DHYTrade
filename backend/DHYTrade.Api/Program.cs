@@ -49,6 +49,7 @@ builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<PositionService>();
 builder.Services.AddScoped<HistoryService>();
 builder.Services.AddHttpClient<IQuoteProvider, SinaQuoteProvider>();
+builder.Services.AddHttpClient<IExchangeRateService, ExchangeRateService>();
 builder.Services.AddHostedService<QuoteRefreshService>();
 
 builder.Services.AddCors(options =>
