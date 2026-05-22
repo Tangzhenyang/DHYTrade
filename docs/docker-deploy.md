@@ -12,7 +12,7 @@
 
 - Linux 服务器已安装 Docker。
 - Linux 服务器已安装 Docker Compose Plugin。
-- 服务器开放 8080 端口。
+- 服务器开放 8081 端口。
 
 可用以下命令检查：
 
@@ -40,7 +40,7 @@ docker compose up -d --build
 
 启动后：
 
-- 前端访问地址：`http://服务器IP:8080/`
+- 前端访问地址：`http://服务器IP:8081/`
 - 后端 API 不对外暴露，仅在容器内部网络可访问。
 
 ## 常用命令
