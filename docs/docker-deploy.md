@@ -12,7 +12,7 @@
 
 - Linux 服务器已安装 Docker。
 - Linux 服务器已安装 Docker Compose Plugin。
-- 服务器开放 80 端口。
+- 服务器开放 6000 端口。
 
 可用以下命令检查：
 
@@ -40,10 +40,8 @@ docker compose up -d --build
 
 启动后：
 
-- 前端访问地址：`http://服务器IP/`
-- 后端 Swagger：`http://服务器IP/api` 通过前端 Nginx 反代访问 API，Swagger 本身仍在后端容器内部的 `http://backend:5000/swagger`
-
-如果你要直接映射 Swagger 到公网，可以后续再加独立端口。
+- 前端访问地址：`http://服务器IP:6000/`
+- 后端 API 不对外暴露，仅在容器内部网络可访问。
 
 ## 常用命令
 
@@ -114,9 +112,9 @@ docker compose down
 docker compose up -d --build
 ```
 
-## 反向代理说明
+## 架构说明
 
-前端容器内的 Nginx 会把 `/api/*` 请求转发到后端容器，因此浏览器端不需要单独配置 API 地址。
+前端 Nginx 仅提供静态资源服务，后端 API 不对外暴露，仅在容器内部网络通信。
 
 ## 建议
 
