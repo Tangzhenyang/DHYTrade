@@ -9,6 +9,12 @@ public record QuoteResult(
     DateTime QuoteTime
 );
 
+public record QuoteSearchResult(
+    string StockCode,
+    string StockName,
+    string MarketType
+);
+
 public record BatchQuoteRequest(
     List<string> StockCodes
 );

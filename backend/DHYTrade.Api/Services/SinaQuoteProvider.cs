@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using DHYTrade.Api.Models.DTOs;
 
 namespace DHYTrade.Api.Services;
@@ -7,6 +8,7 @@ namespace DHYTrade.Api.Services;
 public class SinaQuoteProvider : IQuoteProvider
 {
     private readonly HttpClient _http;
+    private static readonly Regex SuggestValueRegex = new("var\\s+suggestvalue=\"(?<value>.*)\";", RegexOptions.Compiled);
 
     public SinaQuoteProvider(HttpClient http)
     {
@@ -45,6 +47,24 @@ public class SinaQuoteProvider : IQuoteProvider
         }
 
         return results;
+    }
+
+    public async Task<List<QuoteSearchResult>> SearchQuotesAsync(string keyword)
+    {
+        var trimmedKeyword = keyword?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedKeyword))
+            return new List<QuoteSearchResult>();
+
+        var url = $"https://suggest3.sinajs.cn/suggest/type=11,12,13,14,15&key={Uri.EscapeDataString(trimmedKeyword)}";
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Referrer = new Uri("https://finance.sina.com.cn");
+
+        var response = await _http.SendAsync(request);
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        var encoding = Encoding.GetEncoding("GB18030");
+        var text = encoding.GetString(bytes);
+
+        return ParseSuggestResults(text);
     }
 
     private static string ToSinaCode(string code)
@@ -109,5 +129,41 @@ public class SinaQuoteProvider : IQuoteProvider
         {
             return null;
         }
+    }
+
+    private static List<QuoteSearchResult> ParseSuggestResults(string text)
+    {
+        var match = SuggestValueRegex.Match(text);
+        if (!match.Success)
+            return new List<QuoteSearchResult>();
+
+        var rawValue = match.Groups["value"].Value;
+        if (string.IsNullOrWhiteSpace(rawValue))
+            return new List<QuoteSearchResult>();
+
+        var results = new List<QuoteSearchResult>();
+        var entries = rawValue.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (var entry in entries)
+        {
+            var fields = entry.Split(',', StringSplitOptions.None);
+            if (fields.Length < 4)
+                continue;
+
+            var stockName = fields[0].Trim();
+            var stockCode = fields[3].Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(stockName) || string.IsNullOrWhiteSpace(stockCode))
+                continue;
+
+            var marketType = stockCode.StartsWith("hk", StringComparison.OrdinalIgnoreCase)
+                ? "HongKong"
+                : "AShare";
+
+            results.Add(new QuoteSearchResult(stockCode, stockName, marketType));
+        }
+
+        return results
+            .GroupBy(result => result.StockCode, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .ToList();
     }
 }

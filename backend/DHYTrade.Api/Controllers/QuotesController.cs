@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DHYTrade.Api.Models.DTOs;
+using DHYTrade.Api.Models.Entities;
 using DHYTrade.Api.Services;
 
 namespace DHYTrade.Api.Controllers;
@@ -24,6 +25,25 @@ public class QuotesController : ControllerBase
         if (result == null)
             return NotFound(new { message = $"无法获取 {stockCode} 的行情" });
         return Ok(result);
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchQuotes([FromQuery] string keyword, [FromQuery] string? marketType)
+    {
+        if (string.IsNullOrWhiteSpace(keyword))
+            return Ok(Array.Empty<QuoteSearchResult>());
+
+        var results = await _quote.SearchQuotesAsync(keyword);
+
+        if (Enum.TryParse<MarketType>(marketType, true, out var parsedMarketType))
+        {
+            var expectedMarket = parsedMarketType.ToString();
+            results = results
+                .Where(result => string.Equals(result.MarketType, expectedMarket, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        return Ok(results);
     }
 
     [HttpPost("batch")]

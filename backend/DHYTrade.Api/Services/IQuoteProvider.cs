@@ -6,4 +6,5 @@ public interface IQuoteProvider
 {
     Task<QuoteResult?> GetQuoteAsync(string stockCode);
     Task<List<QuoteResult>> GetQuotesAsync(List<string> stockCodes);
+    Task<List<QuoteSearchResult>> SearchQuotesAsync(string keyword);
 }

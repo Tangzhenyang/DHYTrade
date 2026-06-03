@@ -6,11 +6,12 @@ import {
 import { PlusOutlined, DeleteOutlined, EditOutlined, SettingOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getTrades, addTrade, deleteTrade, updateTrade } from '../api/trades';
+import { getPositions } from '../api/positions';
 import { useAuthStore } from '../stores/authStore';
 import { usePositionStore } from '../stores/positionStore';
 import type { TradeRecordDto } from '../api/trades';
 import { marketCurrencySymbols, marketLabels, marketOptions, type MarketType } from '../constants/markets';
-import { getQuote } from '../api/quotes';
+import { getQuote, searchQuotes } from '../api/quotes';
 import { getTradeFeeSettings, setTradeFeeSettings } from '../api/config';
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -105,6 +106,39 @@ export default function TradesPage() {
     return normalized.startsWith('6') ? `sh${normalized}` : `sz${normalized}`;
   };
 
+  const isSellType = () => form.getFieldValue('type') === 'Sell';
+
+  const applySellDefaults = async (marketType: MarketType, stockCode: string, stockName?: string) => {
+    if (editingTrade || !isSellType()) {
+      return;
+    }
+
+    try {
+      const normalizedCode = normalizeStockCode(marketType, stockCode);
+      const response = await getPositions();
+      const matchedPosition = response.data.find((position) => (
+        position.marketType === marketType
+        && (
+          (normalizedCode && position.stockCode === normalizedCode)
+          || (!!stockName && position.stockName === stockName)
+        )
+      ));
+
+      if (matchedPosition) {
+        form.setFieldsValue({ lots: matchedPosition.shares / 100 });
+      }
+    } catch {
+      // Ignore holding lookup failures and keep manual input available.
+    }
+
+    try {
+      const quoteResponse = await getQuote(stockCode);
+      form.setFieldsValue({ price: quoteResponse.data.currentPrice });
+    } catch {
+      // Ignore price lookup failures and keep manual input available.
+    }
+  };
+
   const fillQuoteInfo = async (marketType: MarketType, rawStockCode: string) => {
     const normalizedCode = normalizeStockCode(marketType, rawStockCode);
     if (!normalizedCode) return;
@@ -113,8 +147,34 @@ export default function TradesPage() {
     try {
       const response = await getQuote(normalizedCode);
       form.setFieldValue('stockName', response.data.stockName);
+      await applySellDefaults(marketType, normalizedCode, response.data.stockName);
     } catch (error) {
       message.warning(getErrorMessage(error, '未能自动获取股票名称，请手动填写'));
+    }
+  };
+
+  const fillStockCodeByName = async (marketType: MarketType, stockName: string) => {
+    const keyword = stockName.trim();
+    if (!keyword) {
+      return;
+    }
+
+    try {
+      const response = await searchQuotes(keyword, marketType);
+      const exactMatch = response.data.find((item) => item.stockName === keyword) ?? response.data[0];
+      if (!exactMatch) {
+        message.warning('未能根据股票名称自动获取代码，请手动填写');
+        return;
+      }
+
+      form.setFieldsValue({
+        stockCode: exactMatch.stockCode,
+        stockName: exactMatch.stockName,
+      });
+
+      await applySellDefaults(marketType, exactMatch.stockCode, exactMatch.stockName);
+    } catch (error) {
+      message.warning(getErrorMessage(error, '未能根据股票名称自动获取代码，请手动填写'));
     }
   };
 
@@ -127,7 +187,7 @@ export default function TradesPage() {
   const openAddModal = () => {
     setEditingTrade(null);
     form.resetFields();
-    form.setFieldsValue({ marketType: 'AShare' });
+    form.setFieldsValue({ marketType: 'AShare', type: 'Buy' });
     setModalOpen(true);
   };
 
@@ -304,13 +364,35 @@ export default function TradesPage() {
             />
           </Form.Item>
           <Form.Item name="stockName" label="股票名称" rules={[{ required: true, message: '请输入股票名称' }]}>
-            <Input placeholder="如 贵州茅台" />
+            <Input
+              placeholder="如 贵州茅台"
+              onBlur={(event) => {
+                const marketType = form.getFieldValue('marketType') as MarketType;
+                if (marketType && event.target.value) {
+                  void fillStockCodeByName(marketType, event.target.value);
+                }
+              }}
+            />
           </Form.Item>
           <Form.Item name="type" label="方向" rules={[{ required: true, message: '请选择' }]}>
-            <Select options={[
-              { label: '买入', value: 'Buy' },
-              { label: '卖出', value: 'Sell' },
-            ]} />
+            <Select
+              options={[
+                { label: '买入', value: 'Buy' },
+                { label: '卖出', value: 'Sell' },
+              ]}
+              onChange={(value: 'Buy' | 'Sell') => {
+                if (value !== 'Sell' || editingTrade) {
+                  return;
+                }
+
+                const marketType = form.getFieldValue('marketType') as MarketType;
+                const stockCode = form.getFieldValue('stockCode') as string | undefined;
+                const stockName = form.getFieldValue('stockName') as string | undefined;
+                if (marketType && stockCode) {
+                  void applySellDefaults(marketType, stockCode, stockName);
+                }
+              }}
+            />
           </Form.Item>
           <Form.Item name="lots" label="手数" rules={[{ required: true, message: '请输入手数' }]}>
             <InputNumber min={1} style={{ width: '100%' }} />
