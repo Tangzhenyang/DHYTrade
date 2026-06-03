@@ -4,7 +4,7 @@ import { Card, Table, Typography, Row, Col, Statistic } from 'antd';
 import dayjs from 'dayjs';
 import { getStockPnlDetail } from '../api/history';
 import type { StockPnlDetail } from '../api/history';
-import { PnlValue, getPnlClassName } from '../components/PnlValue';
+import { PnlValue, getPnlClassName, getPnlColor } from '../components/PnlValue';
 
 const columns = [
   {
@@ -68,7 +68,7 @@ export default function StockHistoryPage() {
           <Statistic title="已实现盈亏" value={detail.totalRealizedPnl} precision={0}
             prefix={<span className={getPnlClassName(detail.totalRealizedPnl)} style={{ fontFamily: 'var(--font-mono)' }}>{detail.totalRealizedPnl >= 0 ? '▲' : '▼'}</span>}
             valueStyle={{
-              color: detail.totalRealizedPnl >= 0 ? 'var(--positive)' : 'var(--negative)',
+              color: getPnlColor(detail.totalRealizedPnl),
               fontFamily: 'var(--font-mono)'
             }} />
         </Col>

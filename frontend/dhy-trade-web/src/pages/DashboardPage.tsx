@@ -9,7 +9,7 @@ import { useAuthStore } from '../stores/authStore';
 import { setBaseCapital } from '../api/config';
 import { getExchangeRate, refreshPositions } from '../api/positions';
 import type { ExchangeRateDto, PositionDto } from '../api/positions';
-import { PnlValue, getPnlClassName } from '../components/PnlValue';
+import { PnlValue, getPnlClassName, getPnlColor } from '../components/PnlValue';
 import { marketConfigKeys, marketCurrencySymbols, marketCurrencyUnits, marketLabels, type MarketType } from '../constants/markets';
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -362,7 +362,7 @@ export default function DashboardPage() {
                   prefix={<span className={getPnlClassName(totalSummary.totalPnlRmb)} style={{ fontFamily: 'var(--font-mono)' }}>{totalSummary.totalPnlRmb >= 0 ? '▲ ¥' : '▼ ¥'}</span>}
                   suffix="人民币"
                   valueStyle={{
-                    color: totalSummary.totalPnlRmb >= 0 ? 'var(--positive)' : 'var(--negative)',
+                    color: getPnlColor(totalSummary.totalPnlRmb),
                     fontFamily: 'var(--font-mono)',
                   }} />
               </Card>
@@ -457,7 +457,7 @@ export default function DashboardPage() {
                       <Statistic title={`${marketLabels[summary.marketType]}浮动盈亏`} value={summary.totalPnl} precision={0}
                         prefix={<span className={getPnlClassName(summary.totalPnl)} style={{ fontFamily: 'var(--font-mono)' }}>{summary.totalPnl >= 0 ? `▲ ${marketCurrencySymbols[summary.marketType]}` : `▼ ${marketCurrencySymbols[summary.marketType]}`}</span>} suffix={marketCurrencyUnits[summary.marketType]}
                         valueStyle={{
-                          color: summary.totalPnl >= 0 ? 'var(--positive)' : 'var(--negative)',
+                          color: getPnlColor(summary.totalPnl),
                           fontFamily: 'var(--font-mono)',
                         }} />
                     </Card>

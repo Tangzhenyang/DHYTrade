@@ -458,12 +458,12 @@ input[type='number'] {
 }
 
 .pnl-up {
-  color: var(--positive) !important;
+  color: var(--negative) !important;
   font-weight: 700;
 }
 
 .pnl-down {
-  color: var(--negative) !important;
+  color: var(--positive) !important;
   font-weight: 700;
 }
 
