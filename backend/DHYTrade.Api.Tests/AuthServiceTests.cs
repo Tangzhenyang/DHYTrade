@@ -30,7 +30,7 @@ public class AuthServiceTests
         Assert.NotNull(result);
         var user = await db.Users.SingleAsync(u => u.Username == "admin");
         Assert.False(string.IsNullOrWhiteSpace(user.RefreshToken));
-        Assert.Equal(result!.RefreshToken, user.RefreshToken);
+        Assert.NotEqual(result!.RefreshToken, user.RefreshToken);
         Assert.True(user.RefreshTokenExpiresAt > DateTime.UtcNow.AddDays(29));
     }
 
@@ -38,28 +38,27 @@ public class AuthServiceTests
     public async Task RefreshAsync_WithValidRefreshToken_RotatesTokens()
     {
         await using var db = CreateDbContext();
-        var user = new User
+        db.Users.Add(new User
         {
             Username = "user",
             Email = "user@test.local",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
-            RefreshToken = "old-token",
-            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(1)
-        };
-        db.Users.Add(user);
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password")
+        });
         await db.SaveChangesAsync();
 
         var service = new AuthService(db, CreateConfig());
+        var login = await service.LoginAsync(new LoginRequest("user", "password"));
 
-        var result = await service.RefreshAsync(new RefreshRequest("old-token"));
+        var result = await service.RefreshAsync(new RefreshRequest(login!.RefreshToken));
 
         Assert.NotNull(result);
         Assert.False(string.IsNullOrWhiteSpace(result!.AccessToken));
         Assert.False(string.IsNullOrWhiteSpace(result.RefreshToken));
-        Assert.NotEqual("old-token", result.RefreshToken);
+        Assert.NotEqual(login.RefreshToken, result.RefreshToken);
 
         var saved = await db.Users.SingleAsync(u => u.Username == "user");
-        Assert.Equal(result.RefreshToken, saved.RefreshToken);
+        Assert.NotEqual(result.RefreshToken, saved.RefreshToken);
+        Assert.NotEqual(login.RefreshToken, saved.RefreshToken);
         Assert.True(saved.RefreshTokenExpiresAt > DateTime.UtcNow.AddDays(29));
     }
 
@@ -71,15 +70,17 @@ public class AuthServiceTests
         {
             Username = "user",
             Email = "user@test.local",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
-            RefreshToken = "expired-token",
-            RefreshTokenExpiresAt = DateTime.UtcNow.AddMinutes(-1)
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password")
         });
         await db.SaveChangesAsync();
 
         var service = new AuthService(db, CreateConfig());
+        var login = await service.LoginAsync(new LoginRequest("user", "password"));
+        var user = await db.Users.SingleAsync(u => u.Username == "user");
+        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddMinutes(-1);
+        await db.SaveChangesAsync();
 
-        var result = await service.RefreshAsync(new RefreshRequest("expired-token"));
+        var result = await service.RefreshAsync(new RefreshRequest(login!.RefreshToken));
 
         Assert.Null(result);
     }

@@ -4,6 +4,13 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
+interface RefreshResult {
+  accessToken: string;
+  refreshToken?: string;
+}
+
+let refreshPromise: Promise<RefreshResult> | null = null;
+
 const client = axios.create({
   baseURL: '/api',
   timeout: 10000,
@@ -34,18 +41,25 @@ client.interceptors.response.use(
       originalConfig._retry = true;
 
       try {
-        const res = await axios.post('/api/auth/refresh', {
-          refreshToken,
-        });
-        if (res.data?.accessToken) {
-          const { accessToken, refreshToken } = res.data;
-          localStorage.setItem('accessToken', accessToken);
-          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-          originalConfig.headers.Authorization = `Bearer ${accessToken}`;
-          return client.request(originalConfig);
+        refreshPromise ??= axios
+          .post<RefreshResult>('/api/auth/refresh', { refreshToken })
+          .then((res) => {
+            if (!res.data?.accessToken) {
+              throw new Error('Invalid refresh response');
+            }
+            return res.data;
+          })
+          .finally(() => {
+            refreshPromise = null;
+          });
+
+        const { accessToken, refreshToken: nextRefreshToken } = await refreshPromise;
+        localStorage.setItem('accessToken', accessToken);
+        if (nextRefreshToken) {
+          localStorage.setItem('refreshToken', nextRefreshToken);
         }
-        // Refresh endpoint didn't return valid tokens
-        throw new Error('Invalid refresh response');
+        originalConfig.headers.Authorization = `Bearer ${accessToken}`;
+        return client.request(originalConfig);
       } catch {
         localStorage.clear();
         window.location.href = '/login';

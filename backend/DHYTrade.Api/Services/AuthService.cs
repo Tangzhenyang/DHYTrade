@@ -33,7 +33,7 @@ public class AuthService
 
         var accessToken = GenerateAccessToken(user);
         var refreshToken = GenerateRefreshToken();
-        user.RefreshToken = refreshToken;
+        user.RefreshToken = HashRefreshToken(refreshToken);
         user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(GetRefreshTokenExpiryDays());
         await _db.SaveChangesAsync();
 
@@ -42,8 +42,9 @@ public class AuthService
 
     public async Task<AuthResponse?> RefreshAsync(RefreshRequest request)
     {
+        var refreshTokenHash = HashRefreshToken(request.RefreshToken);
         var user = await _db.Users.FirstOrDefaultAsync(u =>
-            u.RefreshToken == request.RefreshToken &&
+            u.RefreshToken == refreshTokenHash &&
             u.RefreshTokenExpiresAt > DateTime.UtcNow &&
             u.IsActive);
 
@@ -51,7 +52,7 @@ public class AuthService
 
         var accessToken = GenerateAccessToken(user);
         var refreshToken = GenerateRefreshToken();
-        user.RefreshToken = refreshToken;
+        user.RefreshToken = HashRefreshToken(refreshToken);
         user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(GetRefreshTokenExpiryDays());
         await _db.SaveChangesAsync();
 
@@ -111,6 +112,12 @@ public class AuthService
     private static string GenerateRefreshToken()
     {
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+    }
+
+    private static string HashRefreshToken(string refreshToken)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));
+        return Convert.ToBase64String(bytes);
     }
 
     private double GetRefreshTokenExpiryDays()
