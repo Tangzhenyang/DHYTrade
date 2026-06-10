@@ -16,9 +16,24 @@ export default function CalculatorPage() {
   const [capital, setCapital] = useState<number>(1000000);
   const [marketType, setMarketType] = useState<MarketType>('AShare');
   const [items, setItems] = useState<CopyResultItem[]>([]);
-  const [totalActual, setTotalActual] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const totalActual = items.reduce((sum, item) => sum + item.actualAmount, 0);
+
+  const updateItemLots = (stockCode: string, lots: number | null) => {
+    const nextLots = Math.max(0, Math.floor(lots || 0));
+    setItems((prev) =>
+      prev.map((item) =>
+        item.stockCode === stockCode
+          ? {
+              ...item,
+              suggestLots: nextLots,
+              actualAmount: nextLots * 100 * item.price,
+            }
+          : item
+      )
+    );
+  };
 
   const columns = [
     { title: '股票', dataIndex: 'stockName', key: 'name' },
@@ -36,8 +51,17 @@ export default function CalculatorPage() {
       render: (v: number) => <span style={{ fontFamily: 'var(--font-mono)' }}>{formatMoney(v, marketType, 2)}</span>
     },
     {
-      title: '建议手数', dataIndex: 'suggestLots', key: 'lots',
-      render: (v: number) => <span style={{ fontFamily: 'var(--font-mono)' }}>{v}</span>
+      title: '手数', dataIndex: 'suggestLots', key: 'lots',
+      render: (v: number, record: CopyResultItem) => (
+        <InputNumber
+          value={v}
+          min={0}
+          step={1}
+          precision={0}
+          onChange={(value) => updateItemLots(record.stockCode, value)}
+          style={{ width: 96 }}
+        />
+      )
     },
     {
       title: '实际金额', dataIndex: 'actualAmount', key: 'actual',
@@ -56,7 +80,6 @@ export default function CalculatorPage() {
     try {
       const res = await calculateCopy(marketType, capital);
       setItems(res.data.items);
-      setTotalActual(res.data.totalActualAmount);
     } catch {
       // handled by interceptor
     } finally {

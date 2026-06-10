@@ -33,6 +33,28 @@ public class AuthService
 
         var accessToken = GenerateAccessToken(user);
         var refreshToken = GenerateRefreshToken();
+        user.RefreshToken = HashRefreshToken(refreshToken);
+        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(GetRefreshTokenExpiryDays());
+        await _db.SaveChangesAsync();
+
+        return new AuthResponse(accessToken, refreshToken, MapUserDto(user));
+    }
+
+    public async Task<AuthResponse?> RefreshAsync(RefreshRequest request)
+    {
+        var refreshTokenHash = HashRefreshToken(request.RefreshToken);
+        var user = await _db.Users.FirstOrDefaultAsync(u =>
+            u.RefreshToken == refreshTokenHash &&
+            u.RefreshTokenExpiresAt > DateTime.UtcNow &&
+            u.IsActive);
+
+        if (user == null) return null;
+
+        var accessToken = GenerateAccessToken(user);
+        var refreshToken = GenerateRefreshToken();
+        user.RefreshToken = HashRefreshToken(refreshToken);
+        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(GetRefreshTokenExpiryDays());
+        await _db.SaveChangesAsync();
 
         return new AuthResponse(accessToken, refreshToken, MapUserDto(user));
     }
@@ -90,6 +112,17 @@ public class AuthService
     private static string GenerateRefreshToken()
     {
         return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+    }
+
+    private static string HashRefreshToken(string refreshToken)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken));
+        return Convert.ToBase64String(bytes);
+    }
+
+    private double GetRefreshTokenExpiryDays()
+    {
+        return double.Parse(_config["Jwt:RefreshTokenExpiryDays"]!);
     }
 
     private static UserDto MapUserDto(User u) => new(

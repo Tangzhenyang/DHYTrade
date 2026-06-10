@@ -1,4 +1,15 @@
-import axios from 'axios';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
+
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+interface RefreshResult {
+  accessToken: string;
+  refreshToken?: string;
+}
+
+let refreshPromise: Promise<RefreshResult> | null = null;
 
 const client = axios.create({
   baseURL: '/api',
@@ -16,32 +27,50 @@ client.interceptors.request.use((config) => {
 client.interceptors.response.use(
   (res) => res,
   async (error) => {
-    if (error.response?.status === 401 && localStorage.getItem('refreshToken')) {
+    const originalConfig = error.config as RetryableRequestConfig | undefined;
+    const isAuthEndpoint = originalConfig?.url?.includes('/auth/');
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    if (
+      error.response?.status === 401 &&
+      refreshToken &&
+      originalConfig &&
+      !originalConfig._retry &&
+      !isAuthEndpoint
+    ) {
+      originalConfig._retry = true;
+
       try {
-        const res = await axios.post('/api/auth/refresh', {
-          refreshToken: localStorage.getItem('refreshToken'),
-        });
-        if (res.data?.accessToken) {
-          const { accessToken, refreshToken } = res.data;
-          localStorage.setItem('accessToken', accessToken);
-          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-          error.config.headers.Authorization = `Bearer ${accessToken}`;
-          return client.request(error.config);
+        refreshPromise ??= axios
+          .post<RefreshResult>('/api/auth/refresh', { refreshToken })
+          .then((res) => {
+            if (!res.data?.accessToken) {
+              throw new Error('Invalid refresh response');
+            }
+            return res.data;
+          })
+          .finally(() => {
+            refreshPromise = null;
+          });
+
+        const { accessToken, refreshToken: nextRefreshToken } = await refreshPromise;
+        localStorage.setItem('accessToken', accessToken);
+        if (nextRefreshToken) {
+          localStorage.setItem('refreshToken', nextRefreshToken);
         }
-        // Refresh endpoint didn't return valid tokens
-        throw new Error('Invalid refresh response');
+        originalConfig.headers.Authorization = `Bearer ${accessToken}`;
+        return client.request(originalConfig);
       } catch {
         localStorage.clear();
         window.location.href = '/login';
       }
     }
-    // Don't reject 401 on login/register/refresh endpoints (prevent loop)
-    if (error.response?.status === 401) {
-      const isAuthEndpoint = error.config?.url?.includes('/auth/');
-      if (isAuthEndpoint) return Promise.reject(error);
+
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       localStorage.clear();
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );

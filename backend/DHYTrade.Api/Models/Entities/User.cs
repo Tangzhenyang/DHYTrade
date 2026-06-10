@@ -23,6 +23,11 @@ public class User
 
     public bool IsActive { get; set; } = true;
 
+    [MaxLength(256)]
+    public string? RefreshToken { get; set; }
+
+    public DateTime? RefreshTokenExpiresAt { get; set; }
+
     [MaxLength(20)]
     public string? InviteCode { get; set; }
 
