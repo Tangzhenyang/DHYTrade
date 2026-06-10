@@ -51,12 +51,11 @@ public class CopyController : ControllerBase
             var price = quote?.CurrentPrice ?? pos.CurrentPrice;
             var ratio = pos.TotalCost / baseCapital;
             var targetAmount = request.OwnCapital * ratio;
-            var suggestLots = (int)Math.Floor(targetAmount / price / 100);
-            var actualAmount = suggestLots * 100 * price;
+            var lotCalculation = CopyLotCalculator.Calculate(request.OwnCapital, targetAmount, price);
 
             results.Add(new CopyResultItem(
                 pos.StockCode, pos.StockName, ratio,
-                targetAmount, price, suggestLots, actualAmount
+                targetAmount, price, lotCalculation.SuggestLots, lotCalculation.ActualAmount
             ));
         }
 
