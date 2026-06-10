@@ -35,8 +35,11 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("refresh")]
-    public IActionResult Refresh([FromBody] RefreshRequest request)
+    public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
     {
-        return Ok(new { message = "Refresh token rotation not implemented yet" });
+        var result = await _authService.RefreshAsync(request);
+        if (result == null)
+            return Unauthorized(new { message = "登录已过期，请重新登录" });
+        return Ok(result);
     }
 }
